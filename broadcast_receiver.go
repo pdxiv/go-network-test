@@ -11,7 +11,10 @@ import (
 const ConfigFile = "conf.json"
 
 type Configuration struct {
-	BroadcastAddress string
+	SequencerSinkAddress string
+	SequencerRiseAddress string
+	AppSinkAddress       string
+	AppRiseAddress       string
 }
 
 func main() {
@@ -22,30 +25,26 @@ func startSession() error {
 	// Load configuration from file
 	configuration := getConfiguration(ConfigFile)
 
-	fmt.Printf("'%s'\n", configuration.BroadcastAddress)
-
 	// If configuration undefined, set default value
-	if len(configuration.BroadcastAddress) == 0 {
-		configuration.BroadcastAddress = "0.0.0.0:9999"
+	if len(configuration.SequencerSinkAddress) == 0 {
+		configuration.SequencerSinkAddress = "0.0.0.0:9999"
 	}
+	fmt.Printf("'%s'\n", configuration.SequencerSinkAddress)
 
 	// Listen to incoming UDP datagrams
-	pc, err := reuse.ListenPacket("udp", configuration.BroadcastAddress)
+	pc, err := reuse.ListenPacket("udp", configuration.SequencerSinkAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer pc.Close()
 
-	fmt.Println("Listening on", configuration.BroadcastAddress)
+	fmt.Println("Listening on", configuration.SequencerSinkAddress)
 
 	for {
-		//simple read
+		// Simple read
 		buffer := make([]byte, 512)
 		pc.ReadFrom(buffer)
 		fmt.Println("yeyyy, incoming udp datagram!", buffer)
-
-		//simple write
-		// pc.WriteTo([]byte("Hello from client"), addr)
 	}
 }
 
