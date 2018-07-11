@@ -35,12 +35,14 @@ func main() {
 	now := time.Now()
 	startTime := now.UnixNano()
 	stopTime := startTime + RunningTime*1000000000
-
+	datagramCounter := 0
 	for now.UnixNano() < stopTime {
 		connection.Write([]byte("Hello"))
-		time.Sleep(1 * time.Second)
+		datagramCounter++
+		// time.Sleep(1 * time.Second)
 		now = time.Now()
 	}
+	fmt.Println("Datagrams sent:", datagramCounter)
 }
 
 func getConfiguration(filename string) Configuration {
