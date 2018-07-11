@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const RunningTime = 5 // If we're afraid of killing our network with the amount of load
+const PacketLimit = 10000 // If we're afraid of killing our network with the amount of load
 const ConfigFile = "conf.json"
 
 type Configuration struct {
@@ -34,15 +34,18 @@ func main() {
 
 	now := time.Now()
 	startTime := now.UnixNano()
-	stopTime := startTime + RunningTime*1000000000
 	datagramCounter := 0
-	for now.UnixNano() < stopTime {
+	for datagramCounter < PacketLimit {
 		connection.Write([]byte("Hello"))
 		datagramCounter++
 		// time.Sleep(1 * time.Second)
 		now = time.Now()
 	}
+	now = time.Now()
+	stopTime := now.UnixNano()
 	fmt.Println("Datagrams sent:", datagramCounter)
+	fmt.Println("Time taken:", stopTime-startTime)
+	fmt.Println("Datagrams/second:", 1000000000.0 * float32(datagramCounter)/float32(stopTime-startTime))
 }
 
 func getConfiguration(filename string) Configuration {
