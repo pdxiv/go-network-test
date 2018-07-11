@@ -1,0 +1,6 @@
+{
+    "AppRiseAddress": "10.1.1.255:9999",
+    "AppSinkAddress": "0.0.0.0:9999",
+    "SequencerRiseAddress": "10.1.1.255:9999",
+    "SequencerSinkAddress": "0.0.0.0:9999"
+}
