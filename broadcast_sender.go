@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+const RunningTime = 5 // If we're afraid of killing our network with the amount of load
 const ConfigFile = "conf.json"
 
 type Configuration struct {
@@ -31,9 +32,14 @@ func main() {
 	connection, _ := net.DialUDP("udp", nil, destinationAddress)
 	defer connection.Close()
 
-	for {
+	now := time.Now()
+	startTime := now.UnixNano()
+	stopTime := startTime + RunningTime*1000000000
+
+	for now.UnixNano() < stopTime {
 		connection.Write([]byte("Hello"))
 		time.Sleep(1 * time.Second)
+		now = time.Now()
 	}
 }
 
