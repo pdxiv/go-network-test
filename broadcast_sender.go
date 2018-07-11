@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -34,18 +35,21 @@ func main() {
 
 	now := time.Now()
 	startTime := now.UnixNano()
-	datagramCounter := 0
+	datagramCounter := uint64(0)
 	for datagramCounter < PacketLimit {
-		connection.Write([]byte("Hello"))
+		// Construct dummy "protocol" data
+		buf := make([]byte, 8)
+		binary.BigEndian.PutUint64(buf, datagramCounter)
+		buf = append(buf, []byte("Hello")...)
+		connection.Write(buf)
 		datagramCounter++
-		// time.Sleep(1 * time.Second)
 		now = time.Now()
 	}
 	now = time.Now()
 	stopTime := now.UnixNano()
 	fmt.Println("Datagrams sent:", datagramCounter)
 	fmt.Println("Time taken:", stopTime-startTime)
-	fmt.Println("Datagrams/second:", 1000000000.0 * float32(datagramCounter)/float32(stopTime-startTime))
+	fmt.Println("Datagrams/second:", 1000000000.0*float32(datagramCounter)/float32(stopTime-startTime))
 }
 
 func getConfiguration(filename string) Configuration {
