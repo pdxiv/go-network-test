@@ -36,14 +36,20 @@ func main() {
 	now := time.Now()
 	startTime := now.UnixNano()
 	datagramCounter := uint64(0)
+
+	integerBuffer := make([]byte, 8)
+	buf := make([]byte, 0, 65536)
 	for datagramCounter < PacketLimit {
+
 		// Construct dummy "protocol" data
-		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, datagramCounter)
+		buf = buf[:0] // Clear the byte slice send buffer
+		binary.BigEndian.PutUint64(integerBuffer, datagramCounter)
+		buf = append(buf, integerBuffer...)
 		buf = append(buf, []byte("Hello")...)
+
 		connection.Write(buf)
-		datagramCounter++
-		now = time.Now()
+
+		datagramCounter++ // Increment every time we've sent a datagram
 	}
 	now = time.Now()
 	stopTime := now.UnixNano()
