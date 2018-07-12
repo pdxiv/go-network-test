@@ -11,6 +11,7 @@ import (
 
 const PacketLimit = 10000 // If we're afraid of killing our network with the amount of load
 const ConfigFile = "conf.json"
+const BufferAllocationSize = 65536
 
 type Configuration struct {
 	SequencerSinkAddress string
@@ -72,8 +73,8 @@ func initAppMessage(data *AppCommData) {
 	data.TypeBuffer = make([]byte, 2)
 	data.IdBuffer = make([]byte, 8)
 	data.AppSequenceNumberBuffer = make([]byte, 8)
-	data.Payload = make([]byte, 0, 65536)
-	data.MasterBuffer = make([]byte, 0, 65536)
+	data.Payload = make([]byte, 0, BufferAllocationSize)
+	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
 
 func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
