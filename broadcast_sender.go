@@ -38,7 +38,7 @@ func main() {
 	datagramCounter := uint64(0)
 
 	integerBuffer := make([]byte, 8)
-	buf := make([]byte, 0, 65536)
+	buf := make([]byte, 0, 65536) // Declare a byte slice send buffer with size of 64k
 	for datagramCounter < PacketLimit {
 
 		// Construct dummy "protocol" data
