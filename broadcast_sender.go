@@ -20,7 +20,7 @@ type Configuration struct {
 }
 
 type AppCommData struct {
-	// Actual data
+	// Actual data as native data types
 	Type              uint16
 	Id                uint64
 	AppSequenceNumber uint64
@@ -28,9 +28,9 @@ type AppCommData struct {
 	TypeBuffer              []byte
 	IdBuffer                []byte
 	AppSequenceNumberBuffer []byte
-	MasterBuffer            []byte
-	// Actual payload
-	Payload []byte
+	Payload                 []byte
+	// The actual data as bytes that will be sent over UDP
+	MasterBuffer []byte
 }
 
 func main() {
@@ -77,6 +77,7 @@ func initAppMessage(data *AppCommData) {
 }
 
 func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
+	data.MasterBuffer = data.Payload[:0]      // Clear the payload byte slice buffer
 	data.MasterBuffer = data.MasterBuffer[:0] // Clear the byte slice send buffer
 	binary.BigEndian.PutUint64(data.AppSequenceNumberBuffer, data.AppSequenceNumber)
 	data.MasterBuffer = append(data.MasterBuffer, data.AppSequenceNumberBuffer...)
