@@ -77,13 +77,25 @@ func initAppMessage(data *AppCommData) {
 }
 
 func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
+	// Clear data buffers
 	data.MasterBuffer = data.Payload[:0]      // Clear the payload byte slice buffer
 	data.MasterBuffer = data.MasterBuffer[:0] // Clear the byte slice send buffer
+
+	// Convert fields into byte arrays
+	binary.BigEndian.PutUint16(data.TypeBuffer, data.Type)
+	binary.BigEndian.PutUint64(data.IdBuffer, data.Id)
 	binary.BigEndian.PutUint64(data.AppSequenceNumberBuffer, data.AppSequenceNumber)
+
+	// Add byte arrays to master output buffer
+	data.MasterBuffer = append(data.MasterBuffer, data.TypeBuffer...)
+	data.MasterBuffer = append(data.MasterBuffer, data.IdBuffer...)
 	data.MasterBuffer = append(data.MasterBuffer, data.AppSequenceNumberBuffer...)
+
+	// Add payload to master output buffer
 	data.MasterBuffer = append(data.MasterBuffer, []byte("Hello")...)
+
 	connection.Write(data.MasterBuffer)
-	data.AppSequenceNumber++ // Increment every time we've sent a datagram
+	data.AppSequenceNumber++ // Increment App sequence number every time we've sent a datagram
 }
 
 func getConfiguration(filename string) Configuration {
