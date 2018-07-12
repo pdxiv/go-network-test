@@ -19,6 +19,20 @@ type Configuration struct {
 	AppRiseAddress       string
 }
 
+type AppCommData struct {
+	// Actual data
+	Type              uint16
+	Id                uint64
+	AppSequenceNumber uint64
+	// Temporary buffer storage for data
+	TypeBuffer              []byte
+	IdBuffer                []byte
+	AppSequenceNumberBuffer []byte
+	MasterBuffer            []byte
+	// Actual payload
+	Payload []byte
+}
+
 func main() {
 	// Load configuration from file
 	configuration := getConfiguration(ConfigFile)
@@ -35,27 +49,40 @@ func main() {
 
 	now := time.Now()
 	startTime := now.UnixNano()
-	datagramCounter := uint64(0)
 
-	integerBuffer := make([]byte, 8)
-	buf := make([]byte, 0, 65536) // Declare a byte slice send buffer with size of 64k
-	for datagramCounter < PacketLimit {
+	var data AppCommData
 
-		// Construct dummy "protocol" data
-		buf = buf[:0] // Clear the byte slice send buffer
-		binary.BigEndian.PutUint64(integerBuffer, datagramCounter)
-		buf = append(buf, integerBuffer...)
-		buf = append(buf, []byte("Hello")...)
-
-		connection.Write(buf)
-
-		datagramCounter++ // Increment every time we've sent a datagram
+	initAppMessage(&data)
+	for data.AppSequenceNumber < PacketLimit {
+		sendAppMessage(&data, connection)
 	}
+
 	now = time.Now()
 	stopTime := now.UnixNano()
-	fmt.Println("Datagrams sent:", datagramCounter)
+	fmt.Println("Datagrams sent:", data.AppSequenceNumber)
 	fmt.Println("Time taken:", stopTime-startTime)
-	fmt.Println("Datagrams/second:", 1000000000.0*float32(datagramCounter)/float32(stopTime-startTime))
+	fmt.Println("Datagrams/second:", 1000000000.0*float32(data.AppSequenceNumber)/float32(stopTime-startTime))
+}
+
+// Initialize all the message parameters
+func initAppMessage(data *AppCommData) {
+	data.Type = 0
+	data.Id = 0
+	data.AppSequenceNumber = 0
+	data.TypeBuffer = make([]byte, 2)
+	data.IdBuffer = make([]byte, 8)
+	data.AppSequenceNumberBuffer = make([]byte, 8)
+	data.Payload = make([]byte, 0, 65536)
+	data.MasterBuffer = make([]byte, 0, 65536)
+}
+
+func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
+	data.MasterBuffer = data.MasterBuffer[:0] // Clear the byte slice send buffer
+	binary.BigEndian.PutUint64(data.AppSequenceNumberBuffer, data.AppSequenceNumber)
+	data.MasterBuffer = append(data.MasterBuffer, data.AppSequenceNumberBuffer...)
+	data.MasterBuffer = append(data.MasterBuffer, []byte("Hello")...)
+	connection.Write(data.MasterBuffer)
+	data.AppSequenceNumber++ // Increment every time we've sent a datagram
 }
 
 func getConfiguration(filename string) Configuration {
