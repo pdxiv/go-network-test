@@ -11,7 +11,7 @@ import (
 
 const PacketLimit = 10000 // If we're afraid of killing our network with the amount of load
 const ConfigFile = "conf.json"
-const BufferAllocationSize = 65536
+const BufferAllocationSize = 65507
 
 type Configuration struct {
 	SequencerSinkAddress string
@@ -22,11 +22,14 @@ type Configuration struct {
 
 type AppCommData struct {
 	// Actual data as native data types
-	Type              uint16
-	Id                uint64
-	AppSequenceNumber uint64
+	Type                      uint16
+	PayloadSize               uint16
+	Id                        uint64
+	AppSequenceNumber         uint64
+	PreviousAppSequenceNumber uint64 // Used to keep track of sequence number gaps
 	// Temporary buffer storage for data
 	TypeBuffer              []byte
+	SizeBuffer              []byte
 	IdBuffer                []byte
 	AppSequenceNumberBuffer []byte
 	Payload                 []byte
@@ -55,6 +58,9 @@ func main() {
 
 	initAppMessage(&data)
 	for data.AppSequenceNumber < PacketLimit {
+		data.Payload = []byte("Hello")
+		sendAppMessage(&data, connection)
+		data.Payload = []byte("Shittydata")
 		sendAppMessage(&data, connection)
 	}
 
@@ -68,9 +74,12 @@ func main() {
 // Initialize all the message parameters
 func initAppMessage(data *AppCommData) {
 	data.Type = 0
+	data.PayloadSize = 0
 	data.Id = 0
 	data.AppSequenceNumber = 0
+	data.PreviousAppSequenceNumber = 0
 	data.TypeBuffer = make([]byte, 2)
+	data.SizeBuffer = make([]byte, 2)
 	data.IdBuffer = make([]byte, 8)
 	data.AppSequenceNumberBuffer = make([]byte, 8)
 	data.Payload = make([]byte, 0, BufferAllocationSize)
@@ -79,21 +88,24 @@ func initAppMessage(data *AppCommData) {
 
 func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
 	// Clear data buffers
-	data.MasterBuffer = data.Payload[:0]      // Clear the payload byte slice buffer
 	data.MasterBuffer = data.MasterBuffer[:0] // Clear the byte slice send buffer
+
+	data.PayloadSize = uint16(len(data.Payload))
 
 	// Convert fields into byte arrays
 	binary.BigEndian.PutUint16(data.TypeBuffer, data.Type)
+	binary.BigEndian.PutUint16(data.SizeBuffer, data.PayloadSize)
 	binary.BigEndian.PutUint64(data.IdBuffer, data.Id)
 	binary.BigEndian.PutUint64(data.AppSequenceNumberBuffer, data.AppSequenceNumber)
 
 	// Add byte arrays to master output buffer
 	data.MasterBuffer = append(data.MasterBuffer, data.TypeBuffer...)
+	data.MasterBuffer = append(data.MasterBuffer, data.SizeBuffer...)
 	data.MasterBuffer = append(data.MasterBuffer, data.IdBuffer...)
 	data.MasterBuffer = append(data.MasterBuffer, data.AppSequenceNumberBuffer...)
 
 	// Add payload to master output buffer
-	data.MasterBuffer = append(data.MasterBuffer, []byte("Hello")...)
+	data.MasterBuffer = append(data.MasterBuffer, data.Payload...)
 
 	connection.Write(data.MasterBuffer)
 	data.AppSequenceNumber++ // Increment App sequence number every time we've sent a datagram
