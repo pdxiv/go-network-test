@@ -25,7 +25,7 @@ type AppCommData struct {
 	PayloadSize               uint16
 	Id                        uint64
 	AppSequenceNumber         uint64
-	PreviousAppSequenceNumber int64 // Used to keep track of sequence number gaps
+	ExpectedAppSequenceNumber uint64
 	// Temporary buffer storage for data
 	TypeBuffer              []byte
 	SizeBuffer              []byte
@@ -42,7 +42,7 @@ func initAppMessage(data *AppCommData) {
 	data.PayloadSize = 0
 	data.Id = 0
 	data.AppSequenceNumber = 0
-	data.PreviousAppSequenceNumber = -1
+	data.ExpectedAppSequenceNumber = 0
 	data.TypeBuffer = make([]byte, 2)
 	data.SizeBuffer = make([]byte, 2)
 	data.IdBuffer = make([]byte, 8)
@@ -54,24 +54,24 @@ func initAppMessage(data *AppCommData) {
 /*
 The sequence number gap detection doesn't work properly right now.
 Here's how it should work:
-- At initialization, set PreviousAppSequenceNumber to -1
+- At initialization, set ExpectedAppSequenceNumber to 0
 - Read the App message, and decode AppSequenceNumber
-- if (PreviousAppSequenceNumber+1) == AppSequenceNumber then
--   increment PreviousAppSequenceNumber
+- if (ExpectedAppSequenceNumber) == AppSequenceNumber then
+-   increment ExpectedAppSequenceNumber
 - else
 -   report a sequence number gap (in the future, ask for the gaps to be filled)
--   PreviousAppSequenceNumber = AppSequenceNumber
+-   ExpectedAppSequenceNumber = AppSequenceNumber + 1
 */
 func decodeAppMessage(data *AppCommData) {
-	data.PreviousAppSequenceNumber = int64(data.AppSequenceNumber)
+	data.ExpectedAppSequenceNumber = data.AppSequenceNumber
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
 	data.Id = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
 	data.AppSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[12:20])
 	data.Payload = data.MasterBuffer[20 : 20+data.PayloadSize]
 
-	if data.PreviousAppSequenceNumber+1 != int64(data.AppSequenceNumber) {
-		fmt.Println("**************** Gap: ", data.PreviousAppSequenceNumber+1, "to", data.AppSequenceNumber-1)
+	if data.ExpectedAppSequenceNumber+1 != data.AppSequenceNumber {
+		fmt.Println("**************** Gap: ", data.ExpectedAppSequenceNumber+1, "to", data.AppSequenceNumber-1)
 	}
 	fmt.Println("Datagram type:", data.Type)
 	fmt.Println("Datagram size:", data.PayloadSize)
