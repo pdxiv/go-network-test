@@ -51,28 +51,30 @@ func initAppMessage(data *AppCommData) {
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
 
-/*
-The sequence number gap detection doesn't work properly right now.
-Here's how it should work:
-- At initialization, set ExpectedAppSequenceNumber to 0
-- Read the App message, and decode AppSequenceNumber
-- if (ExpectedAppSequenceNumber) == AppSequenceNumber then
--   increment ExpectedAppSequenceNumber
-- else
--   report a sequence number gap (in the future, ask for the gaps to be filled)
--   ExpectedAppSequenceNumber = AppSequenceNumber + 1
-*/
 func decodeAppMessage(data *AppCommData) {
-	data.ExpectedAppSequenceNumber = data.AppSequenceNumber
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
 	data.Id = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
 	data.AppSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[12:20])
 	data.Payload = data.MasterBuffer[20 : 20+data.PayloadSize]
 
-	if data.ExpectedAppSequenceNumber+1 != data.AppSequenceNumber {
-		fmt.Println("**************** Gap: ", data.ExpectedAppSequenceNumber+1, "to", data.AppSequenceNumber-1)
+	/*
+	   Here's how the gap detection should work:
+	   - At initialization, set ExpectedAppSequenceNumber to 0
+	   - Read the App message, and decode AppSequenceNumber
+	   - if ExpectedAppSequenceNumber == AppSequenceNumber then
+	   -   increment ExpectedAppSequenceNumber
+	   - else
+	   -   report a sequence number gap (in the future, ask for the gaps to be filled)
+	   -   ExpectedAppSequenceNumber = AppSequenceNumber + 1
+	*/
+	if data.ExpectedAppSequenceNumber == data.AppSequenceNumber {
+		data.ExpectedAppSequenceNumber++
+	} else {
+		fmt.Println("**************** Gap: ", data.ExpectedAppSequenceNumber, "to", data.AppSequenceNumber-1)
+		data.ExpectedAppSequenceNumber = data.AppSequenceNumber + 1
 	}
+
 	fmt.Println("Datagram type:", data.Type)
 	fmt.Println("Datagram size:", data.PayloadSize)
 	fmt.Println("Datagram id:", data.Id)
