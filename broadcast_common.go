@@ -68,18 +68,31 @@ func decodeAppMessage(data *AppCommData) {
 	   -   report a sequence number gap (in the future, ask for the gaps to be filled)
 	   -   ExpectedAppSequenceNumber = AppSequenceNumber + 1
 	*/
-	if data.ExpectedAppSequenceNumber == data.AppSequenceNumber {
-		data.ExpectedAppSequenceNumber++
-	} else {
+	/*
+		Currently, sequence number handling is a bit wonky. Here's how it should work:
+		   Sequence number handling should have three possible scenarios:
+		   - higher sequence number than expected - report gap and re-request missing data
+		   - expected sequence number - continue
+		   - lower sequence number than expected - do nothing
+	*/
+	if data.ExpectedAppSequenceNumber < data.AppSequenceNumber {
 		fmt.Println("**************** Gap: ", data.ExpectedAppSequenceNumber, "to", data.AppSequenceNumber-1)
-		data.ExpectedAppSequenceNumber = data.AppSequenceNumber + 1
+		// data.ExpectedAppSequenceNumber = data.AppSequenceNumber + 1
+		data.ExpectedAppSequenceNumber = data.AppSequenceNumber
 	}
 
-	fmt.Println("Datagram type:", data.Type)
-	fmt.Println("Datagram size:", data.PayloadSize)
-	fmt.Println("Datagram id:", data.Id)
-	fmt.Println("Datagram sequence number:", data.AppSequenceNumber)
-	fmt.Printf("Datagram payload: \"%s\"\n", string(data.Payload))
+	if data.ExpectedAppSequenceNumber == data.AppSequenceNumber {
+		fmt.Println("Datagram type:", data.Type)
+		fmt.Println("Datagram size:", data.PayloadSize)
+		fmt.Println("Datagram id:", data.Id)
+		fmt.Println("Datagram sequence number:", data.AppSequenceNumber)
+		fmt.Printf("Datagram payload: \"%s\"\n", string(data.Payload))
+		data.ExpectedAppSequenceNumber++
+	} else if data.ExpectedAppSequenceNumber > data.AppSequenceNumber {
+		// Do nothing, and wait for the sequence numbers to catch up.
+		fmt.Println("**************** Sequence number", data.AppSequenceNumber, "lower than expected", data.ExpectedAppSequenceNumber)
+	}
+
 }
 
 func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
