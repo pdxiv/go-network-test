@@ -12,6 +12,7 @@ const PacketLimit = 10000 // If we're afraid of killing our network with the amo
 const ConfigFile = "conf.json"
 const BufferAllocationSize = 65507
 
+// For handling configuration parameters
 type Configuration struct {
 	SequencerSinkAddress string
 	SequencerRiseAddress string
@@ -19,6 +20,7 @@ type Configuration struct {
 	AppRiseAddress       string
 }
 
+// For handling communication from an App to the Sequencer
 type AppCommData struct {
 	// Actual data as native data types
 	Type                      uint16
@@ -31,6 +33,19 @@ type AppCommData struct {
 	SizeBuffer              []byte
 	IdBuffer                []byte
 	AppSequenceNumberBuffer []byte
+	Payload                 []byte
+	// The actual data as bytes that will be sent over UDP
+	MasterBuffer []byte
+}
+
+// For handling communication from a Sequencer to the Apps
+type SeqCommData struct {
+	// Actual data as native data types
+	SessionId         uint64
+	SeqSequenceNumber uint64
+	// Temporary buffer storage for data
+	SessionIdBuffer         []byte
+	SeqSequenceNumberBuffer []byte
 	Payload                 []byte
 	// The actual data as bytes that will be sent over UDP
 	MasterBuffer []byte
@@ -51,6 +66,7 @@ func initAppMessage(data *AppCommData) {
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
 
+// Decode the bytes in a message from an App
 func decodeAppMessage(data *AppCommData) {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
@@ -95,6 +111,7 @@ func decodeAppMessage(data *AppCommData) {
 
 }
 
+// Encode as bytes and send an App message to the sequencer
 func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
 	// Clear data buffers
 	data.MasterBuffer = data.MasterBuffer[:0] // Clear the byte slice send buffer
@@ -120,6 +137,7 @@ func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
 	data.AppSequenceNumber++ // Increment App sequence number every time we've sent a datagram
 }
 
+// Fetch configuration parameters from JSON file
 func getConfiguration(filename string) Configuration {
 	file, _ := os.Open(filename)
 	defer file.Close()
