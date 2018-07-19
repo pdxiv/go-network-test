@@ -1,5 +1,7 @@
 #!/usr/bin/perl
-# Very simple "happy path" script to attempt to create a config file automatically
+# Very simple "happy path" script to attempt to create a config file
+# automatically.
+# On an Ubuntu/Debian based system, this Perl script may need libjson-perl.
 use strict;
 use warnings;
 our $VERSION = '0.1.0';
@@ -16,14 +18,14 @@ my $json_data = {
 };
 open my $file_handle, q{>}, 'conf.json';
 
-print $file_handle encode_json($json_data);
+print {$file_handle} encode_json($json_data);
 
 close $file_handle;
 
 sub default_route_interface {
-    my @route_info = `route`;
-    foreach (@route_info) {
-        if (/^default.*?(\w+)$/) {
+    my $ip_route_default_interface = qr/^default.* dev (\S+)/;
+    foreach (`ip route`) {
+        if (/${ip_route_default_interface}/) {
             return $1;
         }
     }
@@ -31,17 +33,21 @@ sub default_route_interface {
 }
 
 sub broadcast_for_interface {
-    my $interface         = shift;
-    my @interface_info    = `ifconfig`;
-    my $current_interface = q{};
-    my %interface_broadcast;
-    foreach my $interface_line (@interface_info) {
-        if ( $interface_line =~ /^([^: \n]+)/ ) {
-            $current_interface = $1;
+    my $interface_to_find = shift;
+    my $ip_addr_interface = qr/^\d+:\s+([^:]+)/;
+    my $ip_addr_broadcast = qr/ brd ([\d.]+)/;
+    my $interface;
+    my %broadcast_for_interface;
+    foreach my $line (`ip addr`) {
+        if ( $line =~ /${ip_addr_interface}/ ) {
+            $interface = $1;
         }
-        if ( $interface_line =~ /(?: Bcast:| broadcast )\s*(\S+)/ ) {
-            $interface_broadcast{$current_interface} = $1;
+        if ( $line =~ /${ip_addr_broadcast}/ ) {
+            $broadcast_for_interface{$interface} = $1;
         }
     }
-    return $interface_broadcast{$interface};
+    if ( exists $broadcast_for_interface{$interface_to_find} ) {
+        return $broadcast_for_interface{$interface_to_find};
+    }
+    return q{};
 }
