@@ -10,12 +10,6 @@ func main() {
 	// Load configuration from file
 	configuration := getConfiguration(ConfigFile)
 
-	// If configuration undefined, set default value
-	if len(configuration.AppRiseAddress) == 0 {
-		configuration.AppRiseAddress = "192.168.0.255:9999"
-	}
-	fmt.Printf("'%s'\n", configuration.AppRiseAddress)
-
 	destinationAddress, _ := net.ResolveUDPAddr("udp", configuration.AppRiseAddress)
 	connection, _ := net.DialUDP("udp", nil, destinationAddress)
 	defer connection.Close()
