@@ -6,10 +6,10 @@ import (
 )
 
 func main() {
-	_ = startSession()
+	startSession()
 }
 
-func startSession() error {
+func startSession() {
 	// Load configuration from file
 	configuration := getConfiguration(ConfigFile)
 
@@ -19,13 +19,5 @@ func startSession() error {
 		log.Fatal(err)
 	}
 	defer pc.Close()
-
-	var data AppCommData
-	initAppMessage(&data)
-	data.MasterBuffer = data.MasterBuffer[0:BufferAllocationSize] // allocate receive buffer
-	for {
-		// Simple read
-		pc.ReadFrom(data.MasterBuffer)
-		decodeAppMessage(&data)
-	}
+	receiveAppMessage(pc)
 }
