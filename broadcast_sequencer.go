@@ -57,7 +57,7 @@ func sendSeqMessage(sinkData *AppCommData, riseData *SeqCommData, connection *ne
 	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.SeqSequenceNumberBuffer...)
 
 	// Add payload to master output buffer
-	riseData.MasterBuffer = append(riseData.MasterBuffer, sinkData.Payload...)
+	riseData.MasterBuffer = append(riseData.MasterBuffer, sinkData.MasterBuffer...)
 
 	connection.Write(riseData.MasterBuffer)
 	riseData.SeqSequenceNumber++ // Increment App sequence number every time we've sent a datagram
