@@ -23,8 +23,7 @@ func main() {
 	for data.AppSequenceNumber < PacketLimit {
 		data.Payload = []byte("Hello")
 		sendAppMessage(&data, connection)
-		data.Payload = []byte("Shittydata")
-		sendAppMessage(&data, connection)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	now = time.Now()

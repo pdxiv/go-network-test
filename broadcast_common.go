@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-const PacketLimit = 10000 // If we're afraid of killing our network with the amount of load
+const PacketLimit = 100 // If we're afraid of killing our network with the amount of load
 const ConfigFile = "conf.json"
 const BufferAllocationSize = 65507
 
