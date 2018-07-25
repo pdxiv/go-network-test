@@ -3,6 +3,7 @@ package main
 import (
 	reuse "github.com/libp2p/go-reuseport"
 	"log"
+	"net"
 )
 
 func main() {
@@ -20,4 +21,15 @@ func startSession() {
 	}
 	defer pc.Close()
 	receiveAppMessage(pc)
+}
+
+func receiveAppMessage(pc net.PacketConn) {
+	var data AppCommData
+	initAppMessage(&data)
+	data.MasterBuffer = data.MasterBuffer[0:BufferAllocationSize] // allocate receive buffer
+	for {
+		// Simple read
+		pc.ReadFrom(data.MasterBuffer)
+		decodeAppMessage(&data)
+	}
 }

@@ -111,17 +111,6 @@ func decodeAppMessage(data *AppCommData) {
 
 }
 
-func receiveAppMessage(pc net.PacketConn) {
-	var data AppCommData
-	initAppMessage(&data)
-	data.MasterBuffer = data.MasterBuffer[0:BufferAllocationSize] // allocate receive buffer
-	for {
-		// Simple read
-		pc.ReadFrom(data.MasterBuffer)
-		decodeAppMessage(&data)
-	}
-}
-
 // Encode as bytes and send an App message to the sequencer
 func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
 	// Clear data buffers
