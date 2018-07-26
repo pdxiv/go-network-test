@@ -38,8 +38,9 @@ func receiveAppMessage(pc net.PacketConn, connection *net.UDPConn) {
 	for {
 		// Simple read
 		pc.ReadFrom(sinkData.MasterBuffer)
-		decodeAppMessage(&sinkData)
-		sendSeqMessage(&sinkData, &seqData, connection)
+		if decodeAppMessage(&sinkData) {
+			sendSeqMessage(&sinkData, &seqData, connection)
+		}
 	}
 }
 

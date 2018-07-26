@@ -86,7 +86,7 @@ func decodeSeqMessage() {
 }
 
 // Decode the bytes in a message from an App
-func decodeAppMessage(data *AppCommData) {
+func decodeAppMessage(data *AppCommData) bool {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
 	data.Id = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
@@ -114,9 +114,11 @@ func decodeAppMessage(data *AppCommData) {
 		fmt.Println("Datagram sequence number:", data.AppSequenceNumber)
 		fmt.Printf("Datagram payload: \"%s\"\n", string(data.Payload))
 		data.ExpectedAppSequenceNumber++
+		return true
 	} else {
 		// Do nothing, and wait for the sequence numbers to catch up.
 		fmt.Println("**************** Sequence number", data.AppSequenceNumber, "not expected. Expecting", data.ExpectedAppSequenceNumber)
+		return false
 	}
 
 }
