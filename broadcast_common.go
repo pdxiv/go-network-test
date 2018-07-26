@@ -66,6 +66,25 @@ func initAppMessage(data *AppCommData) {
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
 
+// Decode the bytes in a message from a Seq
+func decodeSeqMessage() {
+	/*
+		Here's how the gap detection should work for an App listening to Seq:
+		- At initialization, set ExpectedSeqSequenceNumber to 0
+		- Read the Seq message, and decode SeqSequenceNumber
+		- if ExpectedSeqSequenceNumber == SeqSequenceNumber then
+		-   increment ExpectedSeqSequenceNumber
+		- else
+		-   report a sequence number gap, and ask for the gaps to be filled
+		-   ExpectedSeqSequenceNumber = SeqSequenceNumber + 1
+
+		Sequence number handling should have three possible scenarios:
+		- higher sequence number than expected - report gap and re-request missing data
+		- expected sequence number - continue
+		- lower sequence number than expected - do nothing
+	*/
+}
+
 // Decode the bytes in a message from an App
 func decodeAppMessage(data *AppCommData) {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
@@ -75,27 +94,18 @@ func decodeAppMessage(data *AppCommData) {
 	data.Payload = data.MasterBuffer[20 : 20+data.PayloadSize]
 
 	/*
-	   Here's how the gap detection should work:
-	   - At initialization, set ExpectedAppSequenceNumber to 0
-	   - Read the App message, and decode AppSequenceNumber
-	   - if ExpectedAppSequenceNumber == AppSequenceNumber then
-	   -   increment ExpectedAppSequenceNumber
-	   - else
-	   -   report a sequence number gap (in the future, ask for the gaps to be filled)
-	   -   ExpectedAppSequenceNumber = AppSequenceNumber + 1
+		Here's how the Sequencer gap handling should work:
+		- At initialization, set ExpectedAppSequenceNumber to 0
+		- Read the App message, and decode AppSequenceNumber
+		- if ExpectedAppSequenceNumber == AppSequenceNumber then
+		-   increment ExpectedAppSequenceNumber
+		- else
+		-   ignore App message
+
+		Sequence number handling should have two possible scenarios:
+		- expected sequence number - continue
+		- lower sequence number than expected - do nothing
 	*/
-	/*
-		Currently, sequence number handling is a bit wonky. Here's how it should work:
-		   Sequence number handling should have three possible scenarios:
-		   - higher sequence number than expected - report gap and re-request missing data
-		   - expected sequence number - continue
-		   - lower sequence number than expected - do nothing
-	*/
-	if data.ExpectedAppSequenceNumber < data.AppSequenceNumber {
-		fmt.Println("**************** Gap: ", data.ExpectedAppSequenceNumber, "to", data.AppSequenceNumber-1)
-		// data.ExpectedAppSequenceNumber = data.AppSequenceNumber + 1
-		data.ExpectedAppSequenceNumber = data.AppSequenceNumber
-	}
 
 	if data.ExpectedAppSequenceNumber == data.AppSequenceNumber {
 		fmt.Println("Datagram type:", data.Type)
@@ -104,9 +114,9 @@ func decodeAppMessage(data *AppCommData) {
 		fmt.Println("Datagram sequence number:", data.AppSequenceNumber)
 		fmt.Printf("Datagram payload: \"%s\"\n", string(data.Payload))
 		data.ExpectedAppSequenceNumber++
-	} else if data.ExpectedAppSequenceNumber > data.AppSequenceNumber {
+	} else {
 		// Do nothing, and wait for the sequence numbers to catch up.
-		fmt.Println("**************** Sequence number", data.AppSequenceNumber, "lower than expected", data.ExpectedAppSequenceNumber)
+		fmt.Println("**************** Sequence number", data.AppSequenceNumber, "not expected. Expecting", data.ExpectedAppSequenceNumber)
 	}
 
 }
