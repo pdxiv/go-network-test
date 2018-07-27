@@ -41,8 +41,10 @@ type AppCommData struct {
 // For handling communication from a Sequencer to the Apps
 type SeqCommData struct {
 	// Actual data as native data types
-	SessionId         uint64
-	SeqSequenceNumber uint64
+	SessionId                 uint64
+	SeqSequenceNumber         uint64
+	NumberOfAppPayloads       uint16 // If we put together several App in one Seq
+	ExpectedSeqSequenceNumber uint64
 	// Temporary buffer storage for data
 	SessionIdBuffer         []byte
 	SeqSequenceNumberBuffer []byte
@@ -66,8 +68,24 @@ func initAppMessage(data *AppCommData) {
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
 
+// Initialize all the message parameters
+func initSeqMessage(data *SeqCommData) {
+	data.SessionId = 0
+	data.SeqSequenceNumber = 0
+	data.NumberOfAppPayloads = 1 // To begin with only ever 1 App in one Seq msg
+	data.ExpectedSeqSequenceNumber = 0
+	data.SessionIdBuffer = make([]byte, 8)
+	data.SeqSequenceNumberBuffer = make([]byte, 8)
+	data.Payload = make([]byte, 0, BufferAllocationSize)
+	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
+}
+
 // Decode the bytes in a message from a Seq
-func decodeSeqMessage() {
+func decodeSeqMessage(data *SeqCommData) bool {
+	data.SessionId = binary.BigEndian.Uint64(data.MasterBuffer[0:4])
+	data.SeqSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[4:8])
+	data.NumberOfAppPayloads = binary.BigEndian.Uint16(data.MasterBuffer[8:10])
+	data.Payload = data.MasterBuffer[10:]
 	/*
 		Here's how the gap detection should work for an App listening to Seq:
 		- At initialization, set ExpectedSeqSequenceNumber to 0
@@ -79,10 +97,23 @@ func decodeSeqMessage() {
 		-   ExpectedSeqSequenceNumber = SeqSequenceNumber + 1
 
 		Sequence number handling should have three possible scenarios:
-		- higher sequence number than expected - report gap and re-request missing data
+		- higher sequence number than expected - report gap, request lost data
 		- expected sequence number - continue
 		- lower sequence number than expected - do nothing
 	*/
+
+	if data.ExpectedSeqSequenceNumber == data.SeqSequenceNumber {
+		fmt.Println("Datagram session:", data.SessionId)
+		fmt.Println("Datagram sequence:", data.SeqSequenceNumber)
+		fmt.Println("Datagram App payloads:", data.NumberOfAppPayloads)
+		data.ExpectedSeqSequenceNumber++
+		return true
+	} else {
+		// Do nothing, and wait for the sequence numbers to catch up.
+		fmt.Println("**************** Sequence number", data.SeqSequenceNumber, "not expected. Expecting", data.ExpectedSeqSequenceNumber)
+		return false
+	}
+
 }
 
 // Decode the bytes in a message from an App
@@ -176,18 +207,8 @@ func sendSeqMessage(sinkData *AppCommData, riseData *SeqCommData, connection *ne
 	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.SeqSequenceNumberBuffer...)
 
 	// Add payload to master output buffer
-	appDataSize := sinkData.PayloadSize + 20 // Size of app packet
+	appDataSize := sinkData.PayloadSize + 20 // Size of App packet
 	riseData.MasterBuffer = append(riseData.MasterBuffer, sinkData.MasterBuffer[0:appDataSize]...)
 	connection.Write(riseData.MasterBuffer)
 	riseData.SeqSequenceNumber++ // Increment App sequence number every time we've sent a datagram
-}
-
-// Initialize all the message parameters
-func initSeqMessage(data *SeqCommData) {
-	data.SessionId = 0
-	data.SeqSequenceNumber = 0
-	data.SessionIdBuffer = make([]byte, 8)
-	data.SeqSequenceNumberBuffer = make([]byte, 8)
-	data.Payload = make([]byte, 0, BufferAllocationSize)
-	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
