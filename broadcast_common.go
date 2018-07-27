@@ -161,3 +161,33 @@ func getConfiguration(filename string) Configuration {
 	}
 	return configuration
 }
+
+// Encode as bytes and send a Seq message to the apps
+func sendSeqMessage(sinkData *AppCommData, riseData *SeqCommData, connection *net.UDPConn) {
+	// Clear riseData buffers
+	riseData.MasterBuffer = riseData.MasterBuffer[:0] // Clear the byte slice send buffer
+
+	// Convert fields into byte arrays
+	binary.BigEndian.PutUint64(riseData.SessionIdBuffer, riseData.SessionId)
+	binary.BigEndian.PutUint64(riseData.SeqSequenceNumberBuffer, riseData.SeqSequenceNumber)
+
+	// Add byte arrays to master output buffer
+	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.SessionIdBuffer...)
+	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.SeqSequenceNumberBuffer...)
+
+	// Add payload to master output buffer
+	appDataSize := sinkData.PayloadSize + 20 // Size of app packet
+	riseData.MasterBuffer = append(riseData.MasterBuffer, sinkData.MasterBuffer[0:appDataSize]...)
+	connection.Write(riseData.MasterBuffer)
+	riseData.SeqSequenceNumber++ // Increment App sequence number every time we've sent a datagram
+}
+
+// Initialize all the message parameters
+func initSeqMessage(data *SeqCommData) {
+	data.SessionId = 0
+	data.SeqSequenceNumber = 0
+	data.SessionIdBuffer = make([]byte, 8)
+	data.SeqSequenceNumberBuffer = make([]byte, 8)
+	data.Payload = make([]byte, 0, BufferAllocationSize)
+	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
+}
