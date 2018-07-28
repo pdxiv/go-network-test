@@ -22,9 +22,9 @@ sysctl -w net.core.wmem_default=33554432
 ## Concepts
 ### Communication terminology
 - Sink: Incoming communication to a service (think, "sink to").
-- Rise: Iutgoing communication from a service (think, "rise from").
+- Rise: Outgoing communication from a service (think, "rise from").
 - Seq: Central service handling all messages. Typically, your system will only have one active Seq.
-- App: All other services.
+- App: All other services. All App services communicate with each other over the Seq.
 ```
            +-------+
   App Sink |       | App Rise
