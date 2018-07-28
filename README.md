@@ -19,3 +19,19 @@ sysctl -w net.core.wmem_max=33554432
 sysctl -w net.core.rmem_default=33554432
 sysctl -w net.core.wmem_default=33554432
 ```
+## Concepts
+### Communication terminology
+All incoming communication to a service is called "Sink" (think, "sink to") and all outgoing communication from a service is called rise (think, "rise from"). The central component handling all messages is called a "Seq". (Typically, your system will only have one active Seq.) All other components are referred to as "App".
+```
+          +-----+
+ App Sink |     | App Rise
++---------> App +---------+
+|         |     |         |
+|         +-----+         |
+|                         |
+|         +-----+         |
+|         |     |         |
++---------+ Seq <---------+
+ Seq Rise |     | Seq Sink
+          +-----+
+```
