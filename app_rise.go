@@ -1,5 +1,6 @@
 package main
 
+// The purpose of this program, is to test broadcast output from App to Seq
 import (
 	"fmt"
 	"net"

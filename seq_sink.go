@@ -1,5 +1,6 @@
 package main
 
+// The purpose of this program, is to test broadcast input from App to Seq
 import (
 	reuse "github.com/libp2p/go-reuseport"
 	"log"

@@ -1,5 +1,6 @@
 package main
 
+// Commonly used functions
 import (
 	"encoding/binary"
 	"encoding/json"
