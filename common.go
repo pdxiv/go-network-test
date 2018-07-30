@@ -99,9 +99,9 @@ func decodeSeqMessage(data *SeqCommData) bool {
 		-   report a sequence number gap, and ask for the gaps to be filled
 		-   ExpectedSeqSequenceNumber = SeqSequenceNumber + 1
 
-		Sequence number handling should have three possible scenarios:
-		- higher sequence number than expected - report gap, request lost data
+		Seq sequence number handling should have three possible scenarios:
 		- expected sequence number - continue
+		- higher sequence number than expected - report gap, request lost data
 		- lower sequence number than expected - do nothing
 	*/
 
@@ -109,11 +109,16 @@ func decodeSeqMessage(data *SeqCommData) bool {
 		fmt.Println("Datagram session:", data.SessionId)
 		fmt.Println("Datagram sequence:", data.SeqSequenceNumber)
 		fmt.Println("Datagram App payloads:", data.NumberOfAppPayloads)
-		data.ExpectedSeqSequenceNumber++
+
 		return true
+	} else if data.ExpectedSeqSequenceNumber < data.SeqSequenceNumber {
+		// Here we should have code to fill gaps from a "gobacker"
+		fmt.Println("**************** Sequence number", data.SeqSequenceNumber, "not expected. Too high. Expecting", data.ExpectedSeqSequenceNumber, "We should try to re-fetch ", data.ExpectedSeqSequenceNumber, "-", data.SeqSequenceNumber-1, "before continuing.")
+		data.ExpectedSeqSequenceNumber = data.SeqSequenceNumber + 1 // Just continue without missing data, for now
+		return false
 	} else {
 		// Do nothing, and wait for the sequence numbers to catch up.
-		fmt.Println("**************** Sequence number", data.SeqSequenceNumber, "not expected. Expecting", data.ExpectedSeqSequenceNumber)
+		fmt.Println("**************** Sequence number", data.SeqSequenceNumber, "not expected. Too low. Expecting", data.ExpectedSeqSequenceNumber)
 		return false
 	}
 
@@ -136,7 +141,7 @@ func decodeAppMessage(data *AppCommData) bool {
 		- else
 		-   ignore App message
 
-		Sequence number handling should have two possible scenarios:
+		App sequence number handling should have two possible scenarios:
 		- expected sequence number - continue
 		- lower sequence number than expected - do nothing
 	*/
