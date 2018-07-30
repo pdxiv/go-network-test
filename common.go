@@ -47,9 +47,10 @@ type SeqCommData struct {
 	NumberOfAppPayloads       uint16 // If we put together several App in one Seq
 	ExpectedSeqSequenceNumber uint64
 	// Temporary buffer storage for data
-	SessionIdBuffer         []byte
-	SeqSequenceNumberBuffer []byte
-	Payload                 []byte
+	SessionIdBuffer           []byte
+	SeqSequenceNumberBuffer   []byte
+	NumberOfAppPayloadsBuffer []byte
+	Payload                   []byte
 	// The actual data as bytes that will be sent over UDP
 	MasterBuffer []byte
 }
@@ -71,21 +72,22 @@ func initAppMessage(data *AppCommData) {
 
 // Initialize all the message parameters
 func initSeqMessage(data *SeqCommData) {
-	data.SessionId = 0
+	data.SessionId = 31337
 	data.SeqSequenceNumber = 0
 	data.NumberOfAppPayloads = 1 // To begin with only ever 1 App in one Seq msg
 	data.ExpectedSeqSequenceNumber = 0
 	data.SessionIdBuffer = make([]byte, 8)
 	data.SeqSequenceNumberBuffer = make([]byte, 8)
+	data.NumberOfAppPayloadsBuffer = make([]byte, 2)
 	data.Payload = make([]byte, 0, BufferAllocationSize)
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
 
 // Decode the bytes in a message from a Seq
 func decodeSeqMessage(data *SeqCommData) bool {
-	data.SessionId = binary.BigEndian.Uint64(data.MasterBuffer[0:4])
-	data.SeqSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[4:8])
-	data.NumberOfAppPayloads = binary.BigEndian.Uint16(data.MasterBuffer[8:10])
+	data.SessionId = binary.BigEndian.Uint64(data.MasterBuffer[0:8])
+	data.SeqSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[8:16])
+	data.NumberOfAppPayloads = binary.BigEndian.Uint16(data.MasterBuffer[16:18])
 	data.Payload = data.MasterBuffer[10:]
 	/*
 		Here's how the gap detection should work for an App listening to Seq:
@@ -196,16 +198,20 @@ func getConfiguration(filename string) Configuration {
 
 // Encode as bytes and send a Seq message to the apps
 func sendSeqMessage(sinkData *AppCommData, riseData *SeqCommData, connection *net.UDPConn) {
+
+	fmt.Println("riseData.NumberOfAppPayloads", riseData.NumberOfAppPayloads)
 	// Clear riseData buffers
 	riseData.MasterBuffer = riseData.MasterBuffer[:0] // Clear the byte slice send buffer
 
 	// Convert fields into byte arrays
 	binary.BigEndian.PutUint64(riseData.SessionIdBuffer, riseData.SessionId)
 	binary.BigEndian.PutUint64(riseData.SeqSequenceNumberBuffer, riseData.SeqSequenceNumber)
+	binary.BigEndian.PutUint16(riseData.NumberOfAppPayloadsBuffer, riseData.NumberOfAppPayloads)
 
 	// Add byte arrays to master output buffer
 	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.SessionIdBuffer...)
 	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.SeqSequenceNumberBuffer...)
+	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.NumberOfAppPayloadsBuffer...)
 
 	// Add payload to master output buffer
 	appDataSize := sinkData.PayloadSize + 20 // Size of App packet
