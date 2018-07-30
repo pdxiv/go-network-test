@@ -38,3 +38,28 @@ sysctl -w net.core.wmem_default=33554432
            |       |
            +-------+
 ```
+### App message handling
+Since UDP doesn't guarantee message delivery, or message order, Apps receiving data from the sequencer need to have a mechanism for handling this. If one or more messages are lost, there is a gap in the sequence number, and the App will request the data with the missing sequence numbers from the "Gobacker" service. If a message with the same Seq sequence number has already been received, the message will be ignored.
+```
+                     +------------+
+                     |Get new     |
+      +--------------+packets from<-------------+
+      |              |Seq         |             |
+      |              +-----^------+             |
+      |                    |                    |
+      |                    |Yes                 |
+      |                    |                    |
++-----v------+       +-----+------+       +-----+------+
+|Gap?        |   No  |Number too  |   No  |Send packet |
+|            +------->low?        +------->to callee   |
+|            |       |            |       |            |
++-----+------+       +------------+       +-----^------+
+      |                                         |
+      |Yes                                      |
+      |                                         |
++-----v------+                            +-----+------+
+|Get missing |                            |Send missing|
+|packets from+---------------------------->packets to  |
+|Gobacker    |                            |callee      |
++------------+                            +------------+
+```
