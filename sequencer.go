@@ -29,6 +29,10 @@ func startSession() {
 }
 
 func listenToAppAndSendSeq(pc net.PacketConn, connection *net.UDPConn) {
+
+	// To keep track of the expected sequence number for each app
+	expectedSequenceForApp := make(map[uint64]uint64)
+
 	var seqData SeqCommData
 	initSeqMessage(&seqData)
 	var sinkData AppCommData
@@ -38,7 +42,7 @@ func listenToAppAndSendSeq(pc net.PacketConn, connection *net.UDPConn) {
 		// Simple read
 		pc.ReadFrom(sinkData.MasterBuffer)
 		// Only send a Seq message if App message is valid
-		if decodeAppMessage(&sinkData) {
+		if decodeAppMessage(&sinkData, &expectedSequenceForApp) {
 			sendSeqMessage(&sinkData, &seqData, connection)
 		}
 	}

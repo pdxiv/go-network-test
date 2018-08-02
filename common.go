@@ -125,7 +125,7 @@ func decodeSeqMessage(data *SeqCommData) bool {
 }
 
 // Decode the bytes in a message from an App
-func decodeAppMessage(data *AppCommData) bool {
+func decodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint64) bool {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
 	data.Id = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
@@ -146,17 +146,24 @@ func decodeAppMessage(data *AppCommData) bool {
 		- lower sequence number than expected - do nothing
 	*/
 
-	if data.ExpectedAppSequenceNumber == data.AppSequenceNumber {
+	if _, ok := (*expectedSequenceForApp)[data.Id]; ok {
+		fmt.Println("found pre-existing entry for app id", data.Id)
+	} else {
+		fmt.Println("couldn't find a previous entry for app id", data.Id)
+		(*expectedSequenceForApp)[data.Id] = 0
+	}
+
+	if (*expectedSequenceForApp)[data.Id] == data.AppSequenceNumber {
 		fmt.Println("Datagram type:", data.Type)
 		fmt.Println("Datagram size:", data.PayloadSize)
 		fmt.Println("Datagram id:", data.Id)
 		fmt.Println("Datagram sequence number:", data.AppSequenceNumber)
 		fmt.Printf("Datagram payload: \"%s\"\n", string(data.Payload))
-		data.ExpectedAppSequenceNumber++
+		(*expectedSequenceForApp)[data.Id]++
 		return true
 	} else {
 		// Do nothing, and wait for the sequence numbers to catch up.
-		fmt.Println("**************** Sequence number", data.AppSequenceNumber, "not expected. Expecting", data.ExpectedAppSequenceNumber)
+		fmt.Println("**************** Sequence number", data.AppSequenceNumber, "not expected. Expecting", (*expectedSequenceForApp)[data.Id])
 		return false
 	}
 

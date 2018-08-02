@@ -3,6 +3,7 @@ package main
 // The purpose of this program, is to test broadcast output from App to Seq
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"time"
 )
@@ -21,6 +22,11 @@ func main() {
 	var data AppCommData
 
 	initAppMessage(&data)
+
+	// Set a random dummy application ID
+	rand.Seed(time.Now().UTC().UnixNano())
+	data.Id = rand.Uint64()
+
 	for data.AppSequenceNumber < PacketLimit {
 		data.Payload = []byte("Hello")
 		sendAppMessage(&data, connection)
