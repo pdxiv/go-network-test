@@ -25,7 +25,7 @@ func main() {
 
 	// Set a random dummy application ID
 	rand.Seed(time.Now().UTC().UnixNano())
-	data.Id = rand.Uint64()
+	data.ID = rand.Uint64()
 
 	for data.AppSequenceNumber < PacketLimit {
 		data.Payload = []byte("Hello")

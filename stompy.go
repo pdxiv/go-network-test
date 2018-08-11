@@ -4,20 +4,21 @@ package main
 // demonstrate what a "proper" rewheelify application should look like.
 
 import (
-	// 	"fmt"
-	reuse "github.com/libp2p/go-reuseport"
 	"log"
 	"net"
 	"time"
+
+	reuse "github.com/libp2p/go-reuseport"
 )
 
-const AppId = "STOMPY" // Wheel ID of the current application
+// AppID contains wheel ID of the current application
+const AppID = "STOMPY"
 
 func main() {
 	// Load configuration from file
 	configuration := getConfiguration(ConfigFile)
 	subscribedApp := []string{"AA", "AB", "AC"}
-	sender, receiver, _ := startSession(AppId, subscribedApp, configuration)
+	sender, receiver, _ := startSession(AppID, subscribedApp, configuration)
 
 	// Initialize time ticker for keeping track of when events happen
 	ticker := time.NewTicker(time.Second)
@@ -36,7 +37,7 @@ func main() {
 	}
 }
 
-func startSession(selfAppId string, subscribedAppId []string, configuration Configuration) (chan<- AppCommData, <-chan AppCommData, bool) {
+func startSession(selfAppID string, subscribedAppID []string, configuration Configuration) (chan<- AppCommData, <-chan AppCommData, bool) {
 	sender := make(chan AppCommData, 1)
 	receiver := make(chan AppCommData, 1)
 
@@ -60,7 +61,7 @@ func receiveSeqMessage(pc net.PacketConn) {
 		pc.ReadFrom(data.MasterBuffer)
 		if decodeSeqMessage(&data) {
 			data.ExpectedSeqSequenceNumber++
-			log.Print("Seq session:", data.SessionId)
+			log.Print("Seq session:", data.SessionID)
 			log.Print("Seq sequence:", data.SeqSequenceNumber)
 			log.Print("Seq App payloads:", data.NumberOfAppPayloads)
 

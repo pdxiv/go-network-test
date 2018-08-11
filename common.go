@@ -9,11 +9,16 @@ import (
 	"os"
 )
 
-const PacketLimit = 100 // If we're afraid of killing our network with the amount of load
+// PacketLimit exists because we may be afraid of killing our network with the amount of load
+const PacketLimit = 100
+
+// ConfigFile contains the name of the JSON file containing config för the application
 const ConfigFile = "conf.json"
+
+// BufferAllocationSize sets the amount of space we-pre-allocate for sending and receiving network data
 const BufferAllocationSize = 65507
 
-// For handling configuration parameters
+// Configuration is for handling configuration parameters
 type Configuration struct {
 	SequencerSinkAddress string
 	SequencerRiseAddress string
@@ -21,33 +26,33 @@ type Configuration struct {
 	AppRiseAddress       string
 }
 
-// For handling communication from an App to the Sequencer
+// AppCommData is for handling communication from an App to the Sequencer
 type AppCommData struct {
 	// Actual data as native data types
 	Type                      uint16
 	PayloadSize               uint16
-	Id                        uint64
+	ID                        uint64
 	AppSequenceNumber         uint64
 	ExpectedAppSequenceNumber uint64
 	// Temporary buffer storage for data
 	TypeBuffer              []byte
 	SizeBuffer              []byte
-	IdBuffer                []byte
+	IDBuffer                []byte
 	AppSequenceNumberBuffer []byte
 	Payload                 []byte
 	// The actual data as bytes that will be sent over UDP
 	MasterBuffer []byte
 }
 
-// For handling communication from a Sequencer to the Apps
+// SeqCommData is for handling communication from a Sequencer to the Apps
 type SeqCommData struct {
 	// Actual data as native data types
-	SessionId                 uint64
+	SessionID                 uint64
 	SeqSequenceNumber         uint64
 	NumberOfAppPayloads       uint16 // If we put together several App in one Seq
 	ExpectedSeqSequenceNumber uint64
 	// Temporary buffer storage for data
-	SessionIdBuffer           []byte
+	SessionIDBuffer           []byte
 	SeqSequenceNumberBuffer   []byte
 	NumberOfAppPayloadsBuffer []byte
 	Payload                   []byte
@@ -59,12 +64,12 @@ type SeqCommData struct {
 func initAppMessage(data *AppCommData) {
 	data.Type = 0
 	data.PayloadSize = 0
-	data.Id = 0
+	data.ID = 0
 	data.AppSequenceNumber = 0
 	data.ExpectedAppSequenceNumber = 0
 	data.TypeBuffer = make([]byte, 2)
 	data.SizeBuffer = make([]byte, 2)
-	data.IdBuffer = make([]byte, 8)
+	data.IDBuffer = make([]byte, 8)
 	data.AppSequenceNumberBuffer = make([]byte, 8)
 	data.Payload = make([]byte, 0, BufferAllocationSize)
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
@@ -72,11 +77,11 @@ func initAppMessage(data *AppCommData) {
 
 // Initialize all the message parameters
 func initSeqMessage(data *SeqCommData) {
-	data.SessionId = 31337
+	data.SessionID = 31337
 	data.SeqSequenceNumber = 0
 	data.NumberOfAppPayloads = 1 // To begin with only ever 1 App in one Seq msg
 	data.ExpectedSeqSequenceNumber = 0
-	data.SessionIdBuffer = make([]byte, 8)
+	data.SessionIDBuffer = make([]byte, 8)
 	data.SeqSequenceNumberBuffer = make([]byte, 8)
 	data.NumberOfAppPayloadsBuffer = make([]byte, 2)
 	data.Payload = make([]byte, 0, BufferAllocationSize)
@@ -85,7 +90,7 @@ func initSeqMessage(data *SeqCommData) {
 
 // Decode the bytes in a message from a Seq
 func decodeSeqMessage(data *SeqCommData) bool {
-	data.SessionId = binary.BigEndian.Uint64(data.MasterBuffer[0:8])
+	data.SessionID = binary.BigEndian.Uint64(data.MasterBuffer[0:8])
 	data.SeqSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[8:16])
 	data.NumberOfAppPayloads = binary.BigEndian.Uint16(data.MasterBuffer[16:18])
 	data.Payload = data.MasterBuffer[10:]
@@ -115,7 +120,7 @@ func decodeSeqMessage(data *SeqCommData) bool {
 		fmt.Println("**************** Sequence number", data.SeqSequenceNumber, "not expected. Too low. Expecting", data.ExpectedSeqSequenceNumber)
 		return false
 	}
-	// fmt.Println("Seq session:", data.SessionId)
+	// fmt.Println("Seq session:", data.SessionID)
 	// fmt.Println("Seq sequence:", data.SeqSequenceNumber)
 	// fmt.Println("Seq App payloads:", data.NumberOfAppPayloads)
 	return true
@@ -125,7 +130,7 @@ func decodeSeqMessage(data *SeqCommData) bool {
 func decodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint64) bool {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
-	data.Id = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
+	data.ID = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
 	data.AppSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[12:20])
 	data.Payload = data.MasterBuffer[20 : 20+data.PayloadSize]
 
@@ -143,24 +148,24 @@ func decodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint
 		- lower sequence number than expected - do nothing
 	*/
 
-	if _, ok := (*expectedSequenceForApp)[data.Id]; ok {
-		fmt.Println("found pre-existing entry for app id", data.Id)
+	if _, ok := (*expectedSequenceForApp)[data.ID]; ok {
+		fmt.Println("found pre-existing entry for app id", data.ID)
 	} else {
-		fmt.Println("couldn't find a previous entry for app id", data.Id)
-		(*expectedSequenceForApp)[data.Id] = 0
+		fmt.Println("couldn't find a previous entry for app id", data.ID)
+		(*expectedSequenceForApp)[data.ID] = 0
 	}
 
-	if (*expectedSequenceForApp)[data.Id] != data.AppSequenceNumber {
+	if (*expectedSequenceForApp)[data.ID] != data.AppSequenceNumber {
 		// Do nothing, and wait for the sequence numbers to catch up.
-		fmt.Println("**************** Sequence number", data.AppSequenceNumber, "not expected. Expecting", (*expectedSequenceForApp)[data.Id])
+		fmt.Println("**************** Sequence number", data.AppSequenceNumber, "not expected. Expecting", (*expectedSequenceForApp)[data.ID])
 		return false
 	}
 	fmt.Println("App type:", data.Type)
 	fmt.Println("App size:", data.PayloadSize)
-	fmt.Println("App id:", data.Id)
+	fmt.Println("App id:", data.ID)
 	fmt.Println("App sequence number:", data.AppSequenceNumber)
 	fmt.Printf("App payload: \"%s\"\n", string(data.Payload))
-	(*expectedSequenceForApp)[data.Id]++
+	(*expectedSequenceForApp)[data.ID]++
 	return true
 
 }
@@ -175,13 +180,13 @@ func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
 	// Convert fields into byte arrays
 	binary.BigEndian.PutUint16(data.TypeBuffer, data.Type)
 	binary.BigEndian.PutUint16(data.SizeBuffer, data.PayloadSize)
-	binary.BigEndian.PutUint64(data.IdBuffer, data.Id)
+	binary.BigEndian.PutUint64(data.IDBuffer, data.ID)
 	binary.BigEndian.PutUint64(data.AppSequenceNumberBuffer, data.AppSequenceNumber)
 
 	// Add byte arrays to master output buffer
 	data.MasterBuffer = append(data.MasterBuffer, data.TypeBuffer...)
 	data.MasterBuffer = append(data.MasterBuffer, data.SizeBuffer...)
-	data.MasterBuffer = append(data.MasterBuffer, data.IdBuffer...)
+	data.MasterBuffer = append(data.MasterBuffer, data.IDBuffer...)
 	data.MasterBuffer = append(data.MasterBuffer, data.AppSequenceNumberBuffer...)
 
 	// Add payload to master output buffer
@@ -212,12 +217,12 @@ func sendSeqMessage(sinkData *AppCommData, riseData *SeqCommData, connection *ne
 	riseData.MasterBuffer = riseData.MasterBuffer[:0] // Clear the byte slice send buffer
 
 	// Convert fields into byte arrays
-	binary.BigEndian.PutUint64(riseData.SessionIdBuffer, riseData.SessionId)
+	binary.BigEndian.PutUint64(riseData.SessionIDBuffer, riseData.SessionID)
 	binary.BigEndian.PutUint64(riseData.SeqSequenceNumberBuffer, riseData.SeqSequenceNumber)
 	binary.BigEndian.PutUint16(riseData.NumberOfAppPayloadsBuffer, riseData.NumberOfAppPayloads)
 
 	// Add byte arrays to master output buffer
-	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.SessionIdBuffer...)
+	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.SessionIDBuffer...)
 	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.SeqSequenceNumberBuffer...)
 	riseData.MasterBuffer = append(riseData.MasterBuffer, riseData.NumberOfAppPayloadsBuffer...)
 
