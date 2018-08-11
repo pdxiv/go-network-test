@@ -15,6 +15,7 @@ my $json_data = {
     'AppSinkAddress'       => '0.0.0.0:9999',
     'SequencerRiseAddress' => "$broadcast_address:9999",
     'SequencerSinkAddress' => '0.0.0.0:9998',
+    'MaxSendsInFlight'     => 10,
 };
 open my $file_handle, q{>}, 'conf.json';
 

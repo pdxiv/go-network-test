@@ -1,6 +1,1 @@
-{
-    "AppRiseAddress": "10.1.1.255:9998",
-    "AppSinkAddress": "0.0.0.0:9999",
-    "SequencerRiseAddress": "10.1.1.255:9999",
-    "SequencerSinkAddress": "0.0.0.0:9998"
-}
+{"SequencerRiseAddress":"192.168.0.255:9999","AppRiseAddress":"192.168.0.255:9998","SequencerSinkAddress":"0.0.0.0:9998","MaxSendsInFlight":10,"AppSinkAddress":"0.0.0.0:9999"}

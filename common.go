@@ -18,12 +18,17 @@ const ConfigFile = "conf.json"
 // BufferAllocationSize sets the amount of space we-pre-allocate for sending and receiving network data
 const BufferAllocationSize = 65507
 
+// SendQueueSizeInitialSize denotes the initial size of the send queue
+const SendQueueSizeInitialSize = 16
+
 // Configuration is for handling configuration parameters
 type Configuration struct {
 	SequencerSinkAddress string
 	SequencerRiseAddress string
 	AppSinkAddress       string
 	AppRiseAddress       string
+	// MaxSendsInFlight defines the maximum number of un-acknowledged sends that are allowed
+	MaxSendsInFlight int
 }
 
 // AppCommData is for handling communication from an App to the Sequencer
@@ -60,6 +65,15 @@ type SeqCommData struct {
 	MasterBuffer []byte
 }
 
+type AppState struct {
+	ID                uint64
+	QueueEntries      uint
+	QueueHeadLocation uint
+	QueueCapacity     uint
+	InFlightMarker    uint
+	SendQueue         [][]byte
+}
+
 // Initialize all the message parameters
 func initAppMessage(data *AppCommData) {
 	data.Type = 0
@@ -86,6 +100,20 @@ func initSeqMessage(data *SeqCommData) {
 	data.NumberOfAppPayloadsBuffer = make([]byte, 2)
 	data.Payload = make([]byte, 0, BufferAllocationSize)
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
+}
+
+func initAppState(ID uint64) AppState {
+	var state AppState
+	state.ID = ID
+	state.QueueEntries = 0
+	state.QueueHeadLocation = 0
+	state.QueueCapacity = SendQueueSizeInitialSize
+	state.InFlightMarker = 0
+	state.SendQueue = make([][]byte, SendQueueSizeInitialSize)
+	for i := range state.SendQueue {
+		state.SendQueue[i] = make([]byte, BufferAllocationSize)
+	}
+	return state
 }
 
 // Decode the bytes in a message from a Seq
