@@ -65,6 +65,7 @@ type SeqCommData struct {
 	MasterBuffer []byte
 }
 
+// AppState handles the internal state of an App, especially regarding sending data
 type AppState struct {
 	ID                uint64
 	QueueEntries      uint
