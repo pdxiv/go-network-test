@@ -105,23 +105,20 @@ func decodeSeqMessage(data *SeqCommData) bool {
 		- lower sequence number than expected - do nothing
 	*/
 
-	if data.ExpectedSeqSequenceNumber == data.SeqSequenceNumber {
-		fmt.Println("Datagram session:", data.SessionId)
-		fmt.Println("Datagram sequence:", data.SeqSequenceNumber)
-		fmt.Println("Datagram App payloads:", data.NumberOfAppPayloads)
-
-		return true
-	} else if data.ExpectedSeqSequenceNumber < data.SeqSequenceNumber {
+	if data.ExpectedSeqSequenceNumber < data.SeqSequenceNumber {
 		// Here we should have code to fill gaps from a "gobacker"
 		fmt.Println("**************** Sequence number", data.SeqSequenceNumber, "not expected. Too high. Expecting", data.ExpectedSeqSequenceNumber, "We should try to re-fetch ", data.ExpectedSeqSequenceNumber, "-", data.SeqSequenceNumber-1, "before continuing.")
 		data.ExpectedSeqSequenceNumber = data.SeqSequenceNumber + 1 // Just continue without missing data, for now
 		return false
-	} else {
+	} else if data.ExpectedSeqSequenceNumber != data.SeqSequenceNumber {
 		// Do nothing, and wait for the sequence numbers to catch up.
 		fmt.Println("**************** Sequence number", data.SeqSequenceNumber, "not expected. Too low. Expecting", data.ExpectedSeqSequenceNumber)
 		return false
 	}
-
+	// fmt.Println("Seq session:", data.SessionId)
+	// fmt.Println("Seq sequence:", data.SeqSequenceNumber)
+	// fmt.Println("Seq App payloads:", data.NumberOfAppPayloads)
+	return true
 }
 
 // Decode the bytes in a message from an App
@@ -153,19 +150,18 @@ func decodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint
 		(*expectedSequenceForApp)[data.Id] = 0
 	}
 
-	if (*expectedSequenceForApp)[data.Id] == data.AppSequenceNumber {
-		fmt.Println("Datagram type:", data.Type)
-		fmt.Println("Datagram size:", data.PayloadSize)
-		fmt.Println("Datagram id:", data.Id)
-		fmt.Println("Datagram sequence number:", data.AppSequenceNumber)
-		fmt.Printf("Datagram payload: \"%s\"\n", string(data.Payload))
-		(*expectedSequenceForApp)[data.Id]++
-		return true
-	} else {
+	if (*expectedSequenceForApp)[data.Id] != data.AppSequenceNumber {
 		// Do nothing, and wait for the sequence numbers to catch up.
 		fmt.Println("**************** Sequence number", data.AppSequenceNumber, "not expected. Expecting", (*expectedSequenceForApp)[data.Id])
 		return false
 	}
+	fmt.Println("App type:", data.Type)
+	fmt.Println("App size:", data.PayloadSize)
+	fmt.Println("App id:", data.Id)
+	fmt.Println("App sequence number:", data.AppSequenceNumber)
+	fmt.Printf("App payload: \"%s\"\n", string(data.Payload))
+	(*expectedSequenceForApp)[data.Id]++
+	return true
 
 }
 
