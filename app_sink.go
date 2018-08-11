@@ -34,9 +34,7 @@ func receiveSeqMessage(pc net.PacketConn) {
 		if decodeSeqMessage(&data) {
 			log.Print("Got data with sequence number ", data.ExpectedSeqSequenceNumber)
 			data.ExpectedSeqSequenceNumber++
-
 		} else {
-
 		}
 	}
 }

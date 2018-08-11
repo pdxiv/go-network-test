@@ -37,7 +37,7 @@ func startSession() {
 		case t := <-ticker.C:
 			latestTime = t.UnixNano()
 		case messageReceived := <-appReceiver:
-			log.Print(latestTime, "derp?? we got something?", string(messageReceived.Payload))
+			log.Print("Message: ", string(messageReceived.Payload), " Time: ", latestTime)
 		}
 	}
 }
