@@ -31,6 +31,6 @@ func receiveAppMessage(pc net.PacketConn) {
 	for {
 		// Simple read
 		pc.ReadFrom(data.MasterBuffer)
-		decodeAppMessage(&data)
+		seqDecodeAppMessage(&data)
 	}
 }

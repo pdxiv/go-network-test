@@ -42,7 +42,7 @@ func listenToAppAndSendSeq(pc net.PacketConn, connection *net.UDPConn) {
 		// Simple read
 		pc.ReadFrom(sinkData.MasterBuffer)
 		// Only send a Seq message if App message is valid
-		if decodeAppMessage(&sinkData, &expectedSequenceForApp) {
+		if seqDecodeAppMessage(&sinkData, &expectedSequenceForApp) {
 			sendSeqMessage(&sinkData, &seqData, connection)
 		}
 	}

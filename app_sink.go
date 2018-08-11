@@ -32,6 +32,7 @@ func receiveSeqMessage(pc net.PacketConn) {
 		// Simple read
 		pc.ReadFrom(data.MasterBuffer)
 		if decodeSeqMessage(&data) {
+			log.Print("Got data with sequence number ", data.ExpectedSeqSequenceNumber)
 			data.ExpectedSeqSequenceNumber++
 
 		} else {

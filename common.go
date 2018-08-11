@@ -93,7 +93,7 @@ func decodeSeqMessage(data *SeqCommData) bool {
 	data.SessionID = binary.BigEndian.Uint64(data.MasterBuffer[0:8])
 	data.SeqSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[8:16])
 	data.NumberOfAppPayloads = binary.BigEndian.Uint16(data.MasterBuffer[16:18])
-	data.Payload = data.MasterBuffer[10:]
+	data.Payload = data.MasterBuffer[18:]
 	/*
 		Here's how the gap detection should work for an App listening to Seq:
 		- At initialization, set ExpectedSeqSequenceNumber to 0
@@ -114,7 +114,8 @@ func decodeSeqMessage(data *SeqCommData) bool {
 		// Here we should have code to fill gaps from a "gobacker"
 		fmt.Println("**************** Sequence number", data.SeqSequenceNumber, "not expected. Too high. Expecting", data.ExpectedSeqSequenceNumber, "We should try to re-fetch ", data.ExpectedSeqSequenceNumber, "-", data.SeqSequenceNumber-1, "before continuing.")
 		data.ExpectedSeqSequenceNumber = data.SeqSequenceNumber + 1 // Just continue without missing data, for now
-		return false
+		return true
+		// return false
 	} else if data.ExpectedSeqSequenceNumber != data.SeqSequenceNumber {
 		// Do nothing, and wait for the sequence numbers to catch up.
 		fmt.Println("**************** Sequence number", data.SeqSequenceNumber, "not expected. Too low. Expecting", data.ExpectedSeqSequenceNumber)
@@ -127,7 +128,7 @@ func decodeSeqMessage(data *SeqCommData) bool {
 }
 
 // Decode the bytes in a message from an App
-func decodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint64) bool {
+func seqDecodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint64) bool {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
 	data.ID = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
@@ -168,6 +169,16 @@ func decodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint
 	(*expectedSequenceForApp)[data.ID]++
 	return true
 
+}
+
+// Decode the bytes in a message from an App
+func appDecodeAppMessage(data *AppCommData) bool {
+	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
+	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
+	data.ID = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
+	data.AppSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[12:20])
+	data.Payload = data.MasterBuffer[20 : 20+data.PayloadSize]
+	return true
 }
 
 // Encode as bytes and send an App message to the sequencer
