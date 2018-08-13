@@ -1,1 +1,1 @@
-{"SequencerRiseAddress":"192.168.0.255:9999","AppRiseAddress":"192.168.0.255:9998","SequencerSinkAddress":"0.0.0.0:9998","MaxSendsInFlight":10,"AppSinkAddress":"0.0.0.0:9999"}
+{"HubRiseAddress":"192.168.0.255:9999","AppRiseAddress":"192.168.0.255:9998","HubSinkAddress":"0.0.0.0:9998","MaxSendsInFlight":10,"AppSinkAddress":"0.0.0.0:9999"}

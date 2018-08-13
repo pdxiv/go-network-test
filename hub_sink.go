@@ -1,6 +1,6 @@
 package main
 
-// The purpose of this program, is to test broadcast input from App to Seq
+// The purpose of this program, is to test broadcast input from App to Hub
 import (
 	reuse "github.com/libp2p/go-reuseport"
 	"log"
@@ -16,7 +16,7 @@ func startSession() {
 	configuration := getConfiguration(ConfigFile)
 
 	// Listen to incoming UDP datagrams
-	pc, err := reuse.ListenPacket("udp", configuration.SequencerSinkAddress)
+	pc, err := reuse.ListenPacket("udp", configuration.HubSinkAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,6 +31,6 @@ func receiveAppMessage(pc net.PacketConn) {
 	for {
 		// Simple read
 		pc.ReadFrom(data.MasterBuffer)
-		seqDecodeAppMessage(&data)
+		hubDecodeAppMessage(&data)
 	}
 }

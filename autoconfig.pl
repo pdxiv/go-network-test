@@ -13,8 +13,8 @@ my $broadcast_address = broadcast_for_interface( default_route_interface() );
 my $json_data = {
     'AppRiseAddress'       => "$broadcast_address:9998",
     'AppSinkAddress'       => '0.0.0.0:9999',
-    'SequencerRiseAddress' => "$broadcast_address:9999",
-    'SequencerSinkAddress' => '0.0.0.0:9998',
+    'HubRiseAddress' => "$broadcast_address:9999",
+    'HubSinkAddress' => '0.0.0.0:9998',
     'MaxSendsInFlight'     => 10,
 };
 open my $file_handle, q{>}, 'conf.json';

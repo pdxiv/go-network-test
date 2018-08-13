@@ -1,6 +1,6 @@
 package main
 
-// The purpose of this program, is to test broadcast output from App to Seq
+// The purpose of this program, is to test broadcast output from App to Hub
 import (
 	// "math/rand"
 	"net"

@@ -23,8 +23,8 @@ sysctl -w net.core.wmem_default=33554432
 ### Communication terminology
 - Sink: Incoming communication to a service (think, "sink to").
 - Rise: Outgoing communication from a service (think, "rise from").
-- Seq: Central service handling all messages. Typically, your system will only have one active Seq.
-- App: All other services. All App services communicate with each other over the Seq.
+- Hub: Central service handling all messages. Typically, your system will only have one active Hub.
+- App: All other services. All App services communicate with each other over the Hub.
 ```
            +-------+
   App Sink |       | App Rise
@@ -33,18 +33,18 @@ sysctl -w net.core.wmem_default=33554432
 |          +-------+          |
 |                             |
 |          +-------+          |
-| Seq Rise |       | Seq Sink |
-+----------+  Seq  <----------+
+| Hub Rise |       | Hub Sink |
++----------+  Hub  <----------+
            |       |
            +-------+
 ```
 ### App message handling
-Since UDP doesn't guarantee message delivery, or message order, Apps receiving data from the sequencer need to have a mechanism for handling this. If one or more messages are lost, there is a gap in the sequence number, and the App will request the data with the missing sequence numbers from the "Gobacker" service. If a message with the same Seq sequence number has already been received, the message will be ignored.
+Since UDP doesn't guarantee message delivery, or message order, Apps receiving data from the hub need to have a mechanism for handling this. If one or more messages are lost, there is a gap in the sequence number, and the App will request the data with the missing sequence numbers from the "Gobacker" service. If a message with the same Hub sequence number has already been received, the message will be ignored.
 ```
                      +------------+
                      |Get new     |
       +--------------+packets from<-------------+
-      |              |Seq         |             |
+      |              |Hub         |             |
       |              +-----^------+             |
       |                    |                    |
       |                    |Yes                 |

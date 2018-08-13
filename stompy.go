@@ -1,6 +1,6 @@
 package main
 
-// The purpose of this program, is to have an App listen to Seq and respond
+// The purpose of this program, is to have an App listen to Hub and respond
 import (
 	reuse "github.com/libp2p/go-reuseport"
 	"log"
@@ -34,7 +34,7 @@ func startSession() {
 	// Initialize channel for receiving
 	appReceiver := make(chan AppCommData, 1)
 
-	go receiveSeqMessage(pc, appReceiver)
+	go receiveHubMessage(pc, appReceiver)
 	for {
 		select {
 		case t := <-ticker.C:
@@ -45,22 +45,22 @@ func startSession() {
 	}
 }
 
-func receiveSeqMessage(pc net.PacketConn, appReceiver chan AppCommData) {
-	var seqData SeqCommData
-	initSeqMessage(&seqData)
+func receiveHubMessage(pc net.PacketConn, appReceiver chan AppCommData) {
+	var hubData HubCommData
+	initHubMessage(&hubData)
 	var appData AppCommData
 	initAppMessage(&appData)
-	seqData.MasterBuffer = seqData.MasterBuffer[0:BufferAllocationSize] // allocate receive buffer
+	hubData.MasterBuffer = hubData.MasterBuffer[0:BufferAllocationSize] // allocate receive buffer
 
 	for {
 		// Simple read
-		pc.ReadFrom(seqData.MasterBuffer)
-		if decodeSeqMessage(&seqData) {
-			// Copy the payload of the sequencer message to the Master Buffer of the app message
-			appData.MasterBuffer = seqData.Payload
+		pc.ReadFrom(hubData.MasterBuffer)
+		if decodeHubMessage(&hubData) {
+			// Copy the payload of the hub message to the Master Buffer of the app message
+			appData.MasterBuffer = hubData.Payload
 			appDecodeAppMessage(&appData)
 			appReceiver <- appData
-			seqData.ExpectedSeqSequenceNumber++
+			hubData.ExpectedHubSequenceNumber++
 		} else {
 		}
 	}

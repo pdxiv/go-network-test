@@ -1,6 +1,6 @@
 package main
 
-// First attempt at sequencer. Simple and working, but missing functionality.
+// First attempt at hub. Simple and working, but missing functionality.
 import (
 	reuse "github.com/libp2p/go-reuseport"
 	"log"
@@ -15,35 +15,35 @@ func startSession() {
 	// Load configuration from file
 	configuration := getConfiguration(ConfigFile)
 
-	destinationAddress, _ := net.ResolveUDPAddr("udp", configuration.SequencerRiseAddress)
+	destinationAddress, _ := net.ResolveUDPAddr("udp", configuration.HubRiseAddress)
 	connection, _ := net.DialUDP("udp", nil, destinationAddress)
 	defer connection.Close()
 
 	// Listen to incoming UDP datagrams
-	pc, err := reuse.ListenPacket("udp", configuration.SequencerSinkAddress)
+	pc, err := reuse.ListenPacket("udp", configuration.HubSinkAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer pc.Close()
-	listenToAppAndSendSeq(pc, connection)
+	listenToAppAndSendHub(pc, connection)
 }
 
-func listenToAppAndSendSeq(pc net.PacketConn, connection *net.UDPConn) {
+func listenToAppAndSendHub(pc net.PacketConn, connection *net.UDPConn) {
 
 	// To keep track of the expected sequence number for each app
 	expectedSequenceForApp := make(map[uint64]uint64)
 
-	var seqData SeqCommData
-	initSeqMessage(&seqData)
+	var hubData HubCommData
+	initHubMessage(&hubData)
 	var sinkData AppCommData
 	initAppMessage(&sinkData)
 	sinkData.MasterBuffer = sinkData.MasterBuffer[0:BufferAllocationSize] // Allocate receive buffer
 	for {
 		// Simple read
 		pc.ReadFrom(sinkData.MasterBuffer)
-		// Only send a Seq message if App message is valid
-		if seqDecodeAppMessage(&sinkData, &expectedSequenceForApp) {
-			sendSeqMessage(&sinkData, &seqData, connection)
+		// Only send a Hub message if App message is valid
+		if hubDecodeAppMessage(&sinkData, &expectedSequenceForApp) {
+			sendHubMessage(&sinkData, &hubData, connection)
 		}
 	}
 }
