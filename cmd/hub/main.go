@@ -2,9 +2,11 @@ package main
 
 // First attempt at hub. Simple and working, but missing functionality.
 import (
-	reuse "github.com/libp2p/go-reuseport"
 	"log"
 	"net"
+
+	reuse "github.com/libp2p/go-reuseport"
+	rwf "github.com/pdxiv/gonetworktest"
 )
 
 func main() {
@@ -13,7 +15,7 @@ func main() {
 
 func startSession() {
 	// Load configuration from file
-	configuration := getConfiguration(ConfigFile)
+	configuration := rwf.getConfiguration(ConfigFile)
 
 	destinationAddress, _ := net.ResolveUDPAddr("udp", configuration.HubRiseAddress)
 	connection, _ := net.DialUDP("udp", nil, destinationAddress)
