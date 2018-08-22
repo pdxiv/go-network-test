@@ -1,4 +1,4 @@
-package gonetworkstuff
+package gonetworktest
 
 // Commonly used functions
 import (
