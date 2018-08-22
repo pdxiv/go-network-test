@@ -13,7 +13,7 @@ func main() {
 
 func startSession() {
 	// Load configuration from file
-	configuration := getConfiguration(ConfigFile)
+	configuration := GetConfiguration(ConfigFile)
 
 	// Listen to incoming UDP datagrams
 	pc, err := reuse.ListenPacket("udp", configuration.HubSinkAddress)
@@ -26,11 +26,11 @@ func startSession() {
 
 func receiveAppMessage(pc net.PacketConn) {
 	var data AppCommData
-	initAppMessage(&data)
+	InitAppMessage(&data)
 	data.MasterBuffer = data.MasterBuffer[0:BufferAllocationSize] // allocate receive buffer
 	for {
 		// Simple read
 		pc.ReadFrom(data.MasterBuffer)
-		hubDecodeAppMessage(&data)
+		HubDecodeAppMessage(&data)
 	}
 }

@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// Load configuration from file
-	configuration := getConfiguration(ConfigFile)
+	configuration := GetConfiguration(ConfigFile)
 
 	destinationAddress, _ := net.ResolveUDPAddr("udp", configuration.AppRiseAddress)
 	connection, _ := net.DialUDP("udp", nil, destinationAddress)
@@ -17,7 +17,7 @@ func main() {
 
 	var data AppCommData
 
-	initAppMessage(&data)
+	InitAppMessage(&data)
 
 	// Set a random dummy application ID
 	//rand.Seed(time.Now().UTC().UnixNano())
@@ -30,7 +30,7 @@ func main() {
 		select {
 		case <-ticker.C:
 			data.Payload = []byte("Hello")
-			sendAppMessage(&data, connection)
+			SendAppMessage(&data, connection)
 		}
 	}
 }

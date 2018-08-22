@@ -15,7 +15,7 @@ func main() {
 
 func startSession() {
 	// Load configuration from file
-	configuration := rwf.getConfiguration(ConfigFile)
+	configuration := rwf.GetConfiguration(ConfigFile)
 
 	destinationAddress, _ := net.ResolveUDPAddr("udp", configuration.HubRiseAddress)
 	connection, _ := net.DialUDP("udp", nil, destinationAddress)
@@ -36,16 +36,16 @@ func listenToAppAndSendHub(pc net.PacketConn, connection *net.UDPConn) {
 	expectedSequenceForApp := make(map[uint64]uint64)
 
 	var hubData HubCommData
-	initHubMessage(&hubData)
+	InitHubMessage(&hubData)
 	var sinkData AppCommData
-	initAppMessage(&sinkData)
+	InitAppMessage(&sinkData)
 	sinkData.MasterBuffer = sinkData.MasterBuffer[0:BufferAllocationSize] // Allocate receive buffer
 	for {
 		// Simple read
 		pc.ReadFrom(sinkData.MasterBuffer)
 		// Only send a Hub message if App message is valid
-		if hubDecodeAppMessage(&sinkData, &expectedSequenceForApp) {
-			sendHubMessage(&sinkData, &hubData, connection)
+		if HubDecodeAppMessage(&sinkData, &expectedSequenceForApp) {
+			SendHubMessage(&sinkData, &hubData, connection)
 		}
 	}
 }

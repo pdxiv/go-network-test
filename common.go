@@ -76,7 +76,7 @@ type AppState struct {
 }
 
 // Initialize all the message parameters
-func initAppMessage(data *AppCommData) {
+func InitAppMessage(data *AppCommData) {
 	data.Type = 0
 	data.PayloadSize = 0
 	data.ID = 0
@@ -91,7 +91,7 @@ func initAppMessage(data *AppCommData) {
 }
 
 // Initialize all the message parameters
-func initHubMessage(data *HubCommData) {
+func InitHubMessage(data *HubCommData) {
 	data.SessionID = 31337
 	data.HubSequenceNumber = 0
 	data.NumberOfAppPayloads = 1 // To begin with only ever 1 App in one Hub msg
@@ -103,7 +103,7 @@ func initHubMessage(data *HubCommData) {
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
 
-func initAppState(ID uint64) AppState {
+func InitAppState(ID uint64) AppState {
 	var state AppState
 	state.ID = ID
 	state.QueueEntries = 0
@@ -118,7 +118,7 @@ func initAppState(ID uint64) AppState {
 }
 
 // Decode the bytes in a message from a Hub
-func decodeHubMessage(data *HubCommData) bool {
+func DecodeHubMessage(data *HubCommData) bool {
 	data.SessionID = binary.BigEndian.Uint64(data.MasterBuffer[0:8])
 	data.HubSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[8:16])
 	data.NumberOfAppPayloads = binary.BigEndian.Uint16(data.MasterBuffer[16:18])
@@ -157,7 +157,7 @@ func decodeHubMessage(data *HubCommData) bool {
 }
 
 // Decode the bytes in a message from an App
-func hubDecodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint64) bool {
+func HubDecodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint64) bool {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
 	data.ID = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
@@ -201,7 +201,7 @@ func hubDecodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]u
 }
 
 // Decode the bytes in a message from an App
-func appDecodeAppMessage(data *AppCommData) bool {
+func AppDecodeAppMessage(data *AppCommData) bool {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
 	data.ID = binary.BigEndian.Uint64(data.MasterBuffer[4:12])
@@ -211,7 +211,7 @@ func appDecodeAppMessage(data *AppCommData) bool {
 }
 
 // Encode as bytes and send an App message to the hub
-func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
+func SendAppMessage(data *AppCommData, connection *net.UDPConn) {
 	// Clear data buffers
 	data.MasterBuffer = data.MasterBuffer[:0] // Clear the byte slice send buffer
 
@@ -237,7 +237,7 @@ func sendAppMessage(data *AppCommData, connection *net.UDPConn) {
 }
 
 // Fetch configuration parameters from JSON file
-func getConfiguration(filename string) Configuration {
+func GetConfiguration(filename string) Configuration {
 	file, _ := os.Open(filename)
 	defer file.Close()
 	decoder := json.NewDecoder(file)
@@ -250,7 +250,7 @@ func getConfiguration(filename string) Configuration {
 }
 
 // Encode as bytes and send a Hub message to the apps
-func sendHubMessage(sinkData *AppCommData, riseData *HubCommData, connection *net.UDPConn) {
+func SendHubMessage(sinkData *AppCommData, riseData *HubCommData, connection *net.UDPConn) {
 
 	fmt.Println("riseData.NumberOfAppPayloads", riseData.NumberOfAppPayloads)
 	// Clear riseData buffers
