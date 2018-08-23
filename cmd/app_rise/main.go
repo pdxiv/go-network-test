@@ -5,19 +5,21 @@ import (
 	// "math/rand"
 	"net"
 	"time"
+
+	rwf "github.com/pdxiv/gonetworktest"
 )
 
 func main() {
 	// Load configuration from file
-	configuration := GetConfiguration(ConfigFile)
+	configuration := rwf.GetConfiguration(rwf.ConfigFile)
 
 	destinationAddress, _ := net.ResolveUDPAddr("udp", configuration.AppRiseAddress)
 	connection, _ := net.DialUDP("udp", nil, destinationAddress)
 	defer connection.Close()
 
-	var data AppCommData
+	var data rwf.AppCommData
 
-	InitAppMessage(&data)
+	rwf.InitAppMessage(&data)
 
 	// Set a random dummy application ID
 	//rand.Seed(time.Now().UTC().UnixNano())
@@ -26,11 +28,11 @@ func main() {
 
 	ticker := time.NewTicker(100 * time.Millisecond)
 
-	for data.AppSequenceNumber < PacketLimit {
+	for data.AppSequenceNumber < rwf.PacketLimit {
 		select {
 		case <-ticker.C:
 			data.Payload = []byte("Hello")
-			SendAppMessage(&data, connection)
+			rwf.SendAppMessage(&data, connection)
 		}
 	}
 }
