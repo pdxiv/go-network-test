@@ -2,9 +2,11 @@ package main
 
 // The purpose of this program, is to test broadcast input from App to Hub
 import (
-	reuse "github.com/libp2p/go-reuseport"
 	"log"
 	"net"
+
+	reuse "github.com/libp2p/go-reuseport"
+	rwf "github.com/pdxiv/gonetworktest"
 )
 
 func main() {
@@ -13,7 +15,7 @@ func main() {
 
 func startSession() {
 	// Load configuration from file
-	configuration := GetConfiguration(ConfigFile)
+	configuration := rwf.GetConfiguration(rwf.ConfigFile)
 
 	// Listen to incoming UDP datagrams
 	pc, err := reuse.ListenPacket("udp", configuration.HubSinkAddress)
@@ -25,12 +27,12 @@ func startSession() {
 }
 
 func receiveAppMessage(pc net.PacketConn) {
-	var data AppCommData
-	InitAppMessage(&data)
-	data.MasterBuffer = data.MasterBuffer[0:BufferAllocationSize] // allocate receive buffer
+	var data rwf.AppCommData
+	rwf.InitAppMessage(&data)
+	data.MasterBuffer = data.MasterBuffer[0:rwf.BufferAllocationSize] // allocate receive buffer
 	for {
 		// Simple read
 		pc.ReadFrom(data.MasterBuffer)
-		HubDecodeAppMessage(&data)
+		rwf.HubDecodeAppMessage(&data)
 	}
 }

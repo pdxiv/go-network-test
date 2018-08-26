@@ -1,1 +1,1 @@
-{"HubRiseAddress":"192.168.0.255:9999","AppRiseAddress":"192.168.0.255:9998","HubSinkAddress":"0.0.0.0:9998","MaxSendsInFlight":10,"AppSinkAddress":"0.0.0.0:9999"}
+{"AppSinkAddress":"0.0.0.0:9999","MaxSendsInFlight":10,"HubRiseAddress":"192.168.43.255:9999","HubSinkAddress":"0.0.0.0:9998","AppRiseAddress":"192.168.43.255:9998"}
