@@ -15,11 +15,11 @@ To download and build:
 ```
 git clone https://github.com/pdxiv/gonetworktest
 go get github.com/pdxiv/gonetworktest
-sh ./build.sh
+./build.sh
 ```
 Network configuration settings are required before running. Settings are located in a `conf.json` file. Either edit this manually to adapt to your network settings, or run
 ```
-sh ./autoconfig.pl
+./autoconfig.pl
 ```
 ### Performance
 To make sure that we get enough performance in Linux, it's important that we remember to increase the default OS send and receive buffer size for all types of connections. Increasing it to something like 32 mb seems to work well for what we're trying to do here:
