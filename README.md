@@ -10,7 +10,17 @@ Some tests of broadcast and UDP network functionality in Go.
 - Relies on `github.com/libp2p/go-reuseport` that sets `SO_REUSEPORT` and `SO_REUSEADDR`, which is functionality that won't be available out of the box before Go version 1.11.
 - Currently only works in Linux, because of the dependency on `github.com/libp2p/go-reuseport`.
 - The autoconfig.pl relies on the Perl JSON module (available in Debian etc as `libjson-perl`).
-
+### Building and running
+To download and build:
+```
+git clone https://github.com/pdxiv/gonetworktest
+go get github.com/pdxiv/gonetworktest
+sh ./build.sh
+```
+Network configuration settings are required before running. Settings are located in a `conf.json` file. Either edit this manually to adapt to your network settings, or run
+```
+sh ./autoconfig.pl
+```
 ### Performance
 To make sure that we get enough performance in Linux, it's important that we remember to increase the default OS send and receive buffer size for all types of connections. Increasing it to something like 32 mb seems to work well for what we're trying to do here:
 ```
