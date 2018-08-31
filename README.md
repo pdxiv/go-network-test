@@ -91,3 +91,12 @@ Since UDP doesn't guarantee message delivery, or message order, Apps receiving d
 |Gobacker    |                            |callee      |
 +------------+                            +------------+
 ```
+
+### Gobacker
+
+#### Usage
+
+The Gobacker service keeps track of what messages have been sent from the Hub. This is used in two situations:
+
+- When an App is starting up and needs to read up on what messages have been sent to build internal state for a session. Typically, it broadcast "who has sequence number 0, for the latest SessionID (0xffffffffffffffff)", and when it gets a response from a Gobacker, it will connect to it via TCP and request messages with sequence numbers 0 to the largest possible sequence number (0xffffffffffffffff). The Gobacker will send as many packets as it has, and then closes down the connection, leaving the App to resume normal online operation. The App should keep track of what message sequence numbers have been sent out already for its' own AppID, so that it doesn't re-send messages to the Hub uselessly.
+- When an App experiences a gap in sequence numbers from the Hub. The App then asks the Gobacker for the messages with the missing sequence numbers, for the current SessionID.
