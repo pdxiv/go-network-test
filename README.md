@@ -13,8 +13,9 @@ Some tests of broadcast and UDP network functionality in Go.
 ### Building and running
 To download and build:
 ```
-git clone https://github.com/pdxiv/gonetworktest
+go get github.com/libp2p/go-reuseport
 go get github.com/pdxiv/gonetworktest
+git clone https://github.com/pdxiv/gonetworktest
 ./build.sh
 ```
 Network configuration settings are required before running. Settings are located in a `conf.json` file. Either edit this manually to adapt to your network settings, or run
