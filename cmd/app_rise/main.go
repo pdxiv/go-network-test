@@ -9,6 +9,9 @@ import (
 	rwf "github.com/pdxiv/gonetworktest"
 )
 
+// PacketLimit exists because we may be afraid of killing our network with the amount of load
+const PacketLimit = 1000000
+
 func main() {
 	// Load configuration from file
 	configuration := rwf.GetConfiguration(rwf.ConfigFile)
@@ -26,9 +29,10 @@ func main() {
 	//data.ID = rand.Uint64()
 	data.ID = 2323
 
-	ticker := time.NewTicker(100 * time.Millisecond)
+	// ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(1000 * time.Nanosecond)
 
-	for data.AppSequenceNumber < rwf.PacketLimit {
+	for data.AppSequenceNumber < PacketLimit {
 		select {
 		case <-ticker.C:
 			data.Payload = []byte("Hello")

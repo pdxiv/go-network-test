@@ -35,7 +35,7 @@ func startSession() {
 	// Initialize channel for receiving
 	appReceiver := make(chan rwf.AppCommData, 1)
 
-	go receiveHubMessage(pc, appReceiver)
+	go receiveHubMessageAndDecode(pc, appReceiver)
 	for {
 		select {
 		case t := <-ticker.C:
@@ -46,7 +46,7 @@ func startSession() {
 	}
 }
 
-func receiveHubMessage(pc net.PacketConn, appReceiver chan rwf.AppCommData) {
+func receiveHubMessageAndDecode(pc net.PacketConn, appReceiver chan rwf.AppCommData) {
 	var hubData rwf.HubCommData
 	rwf.InitHubMessage(&hubData)
 	var appData rwf.AppCommData

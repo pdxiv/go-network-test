@@ -10,9 +10,6 @@ import (
 	"syscall"
 )
 
-// PacketLimit exists because we may be afraid of killing our network with the amount of load
-const PacketLimit = 100
-
 // ConfigFile contains the name of the JSON file containing config för the application
 const ConfigFile = "conf.json"
 
