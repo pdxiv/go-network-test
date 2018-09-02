@@ -1,4 +1,4 @@
-# go-network-test
+# gonetworktest
 
 ## Introduction
 
@@ -8,9 +8,8 @@ Some tests of broadcast and UDP network functionality in Go.
 
 ### Program dependencies
 
-- Requires Go version 1.10 or above to run/build.
-- Relies on `github.com/libp2p/go-reuseport` that sets `SO_REUSEPORT` and `SO_REUSEADDR`, which is functionality that won't be available out of the box before Go version 1.11.
-- Currently only works in Linux, because of the dependency on `github.com/libp2p/go-reuseport`.
+- Requires Go version 1.11 or above to run/build.
+- Currently only tested to work in Linux. (Possibly, the SO_REUSEPORT functionality won't work the same under Windows.)
 - The autoconfig.pl relies on the Perl JSON module (available in Debian etc as `libjson-perl`).
 
 ### Building and running
@@ -18,7 +17,6 @@ Some tests of broadcast and UDP network functionality in Go.
 To download and build:
 
 ```bash
-go get github.com/libp2p/go-reuseport
 go get github.com/pdxiv/gonetworktest
 git clone https://github.com/pdxiv/gonetworktest
 ./build.sh
