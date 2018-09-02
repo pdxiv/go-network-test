@@ -2,10 +2,11 @@ package main
 
 // The purpose of this program, is to test broadcast input from App to Hub
 import (
+	"context"
 	"log"
 	"net"
+	"syscall"
 
-	reuse "github.com/libp2p/go-reuseport"
 	rwf "github.com/pdxiv/gonetworktest"
 )
 
@@ -17,8 +18,10 @@ func startSession() {
 	// Load configuration from file
 	configuration := rwf.GetConfiguration(rwf.ConfigFile)
 
+	var lc net.ListenConfig
+	lc = net.ListenConfig{Control: controlOnConnSetupSoReusePort}
 	// Listen to incoming UDP datagrams
-	pc, err := reuse.ListenPacket("udp", configuration.HubSinkAddress)
+	pc, err := lc.ListenPacket(context.Background(), "udp", configuration.HubSinkAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,4 +38,18 @@ func receiveAppMessage(pc net.PacketConn) {
 		pc.ReadFrom(data.MasterBuffer)
 		rwf.HubDecodeAppMessage(&data)
 	}
+}
+
+func controlOnConnSetupSoReusePort(network string, address string, c syscall.RawConn) error {
+	var operr error
+	var fn = func(s uintptr) {
+		operr = syscall.SetsockoptInt(int(s), syscall.SOL_SOCKET, 0xF /* syscall.SO_REUSE_PORT */, 1)
+	}
+	if err := c.Control(fn); err != nil {
+		return err
+	}
+	if operr != nil {
+		return operr
+	}
+	return nil
 }
