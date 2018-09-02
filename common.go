@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"syscall"
 )
 
 // PacketLimit exists because we may be afraid of killing our network with the amount of load
@@ -75,7 +76,7 @@ type AppState struct {
 	SendQueue         [][]byte
 }
 
-// Initialize all the message parameters
+// InitAppMessage initializes all the message parameters
 func InitAppMessage(data *AppCommData) {
 	data.Type = 0
 	data.PayloadSize = 0
@@ -90,7 +91,7 @@ func InitAppMessage(data *AppCommData) {
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
 
-// Initialize all the message parameters
+// InitHubMessage initializes all the message parameters
 func InitHubMessage(data *HubCommData) {
 	data.SessionID = 31337
 	data.HubSequenceNumber = 0
@@ -103,6 +104,7 @@ func InitHubMessage(data *HubCommData) {
 	data.MasterBuffer = make([]byte, 0, BufferAllocationSize)
 }
 
+// InitAppState initializes the data structure for an App state
 func InitAppState(ID uint64) AppState {
 	var state AppState
 	state.ID = ID
@@ -117,7 +119,7 @@ func InitAppState(ID uint64) AppState {
 	return state
 }
 
-// Decode the bytes in a message from a Hub
+// DecodeHubMessage decodes the bytes in a message from a Hub
 func DecodeHubMessage(data *HubCommData) bool {
 	data.SessionID = binary.BigEndian.Uint64(data.MasterBuffer[0:8])
 	data.HubSequenceNumber = binary.BigEndian.Uint64(data.MasterBuffer[8:16])
@@ -156,7 +158,7 @@ func DecodeHubMessage(data *HubCommData) bool {
 	return true
 }
 
-// Decode the bytes in a message from an App
+// HubDecodeAppMessage decodes the bytes in a message from an App
 func HubDecodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]uint64) bool {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
@@ -200,7 +202,7 @@ func HubDecodeAppMessage(data *AppCommData, expectedSequenceForApp *map[uint64]u
 
 }
 
-// Decode the bytes in a message from an App
+// AppDecodeAppMessage decodes the bytes in a message from an App
 func AppDecodeAppMessage(data *AppCommData) bool {
 	data.Type = binary.BigEndian.Uint16(data.MasterBuffer[0:2])
 	data.PayloadSize = binary.BigEndian.Uint16(data.MasterBuffer[2:4])
@@ -210,7 +212,7 @@ func AppDecodeAppMessage(data *AppCommData) bool {
 	return true
 }
 
-// Encode as bytes and send an App message to the hub
+// SendAppMessage encodes as bytes and send an App message to the hub
 func SendAppMessage(data *AppCommData, connection *net.UDPConn) {
 	// Clear data buffers
 	data.MasterBuffer = data.MasterBuffer[:0] // Clear the byte slice send buffer
@@ -236,7 +238,7 @@ func SendAppMessage(data *AppCommData, connection *net.UDPConn) {
 	data.AppSequenceNumber++ // Increment App sequence number every time we've sent a datagram
 }
 
-// Fetch configuration parameters from JSON file
+// GetConfiguration fetches configuration parameters from JSON file
 func GetConfiguration(filename string) Configuration {
 	file, _ := os.Open(filename)
 	defer file.Close()
@@ -249,7 +251,7 @@ func GetConfiguration(filename string) Configuration {
 	return configuration
 }
 
-// Encode as bytes and send a Hub message to the apps
+// SendHubMessage encodes as bytes and send a Hub message to the apps
 func SendHubMessage(sinkData *AppCommData, riseData *HubCommData, connection *net.UDPConn) {
 
 	fmt.Println("riseData.NumberOfAppPayloads", riseData.NumberOfAppPayloads)
@@ -271,4 +273,19 @@ func SendHubMessage(sinkData *AppCommData, riseData *HubCommData, connection *ne
 	riseData.MasterBuffer = append(riseData.MasterBuffer, sinkData.MasterBuffer[0:appDataSize]...)
 	connection.Write(riseData.MasterBuffer)
 	riseData.HubSequenceNumber++ // Increment App sequence number every time we've sent a datagram
+}
+
+// ControlOnConnSetupSoReusePort creates network setup for SO_REUSEPORT
+func ControlOnConnSetupSoReusePort(network string, address string, c syscall.RawConn) error {
+	var operr error
+	var fn = func(s uintptr) {
+		operr = syscall.SetsockoptInt(int(s), syscall.SOL_SOCKET, 0xF /* syscall.SO_REUSE_PORT */, 1)
+	}
+	if err := c.Control(fn); err != nil {
+		return err
+	}
+	if operr != nil {
+		return operr
+	}
+	return nil
 }

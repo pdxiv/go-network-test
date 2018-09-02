@@ -5,7 +5,6 @@ import (
 	"context"
 	"log"
 	"net"
-	"syscall"
 	"time"
 
 	rwf "github.com/pdxiv/gonetworktest"
@@ -20,7 +19,7 @@ func startSession() {
 	configuration := rwf.GetConfiguration(rwf.ConfigFile)
 
 	var lc net.ListenConfig
-	lc = net.ListenConfig{Control: controlOnConnSetupSoReusePort}
+	lc = net.ListenConfig{Control: ControlOnConnSetupSoReusePort}
 	// Listen to incoming UDP datagrams
 	pc, err := lc.ListenPacket(context.Background(), "udp", configuration.AppSinkAddress)
 	defer pc.Close()
@@ -45,39 +44,4 @@ func startSession() {
 			log.Print("Message: ", string(messageReceived.Payload), " Time: ", latestTime)
 		}
 	}
-}
-
-func receiveHubMessage(pc net.PacketConn, appReceiver chan rwf.AppCommData) {
-	var hubData rwf.HubCommData
-	rwf.InitHubMessage(&hubData)
-	var appData rwf.AppCommData
-	rwf.InitAppMessage(&appData)
-	hubData.MasterBuffer = hubData.MasterBuffer[0:rwf.BufferAllocationSize] // allocate receive buffer
-
-	for {
-		// Simple read
-		pc.ReadFrom(hubData.MasterBuffer)
-		if rwf.DecodeHubMessage(&hubData) {
-			// Copy the payload of the hub message to the Master Buffer of the app message
-			appData.MasterBuffer = hubData.Payload
-			rwf.AppDecodeAppMessage(&appData)
-			appReceiver <- appData
-			hubData.ExpectedHubSequenceNumber++
-		} else {
-		}
-	}
-}
-
-func controlOnConnSetupSoReusePort(network string, address string, c syscall.RawConn) error {
-	var operr error
-	var fn = func(s uintptr) {
-		operr = syscall.SetsockoptInt(int(s), syscall.SOL_SOCKET, 0xF /* syscall.SO_REUSE_PORT */, 1)
-	}
-	if err := c.Control(fn); err != nil {
-		return err
-	}
-	if operr != nil {
-		return operr
-	}
-	return nil
 }
