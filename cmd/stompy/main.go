@@ -22,7 +22,7 @@ func startSession() {
 	log.Print("Send queue has the capacity of this number of entries: ", len(appState.SendQueue))
 
 	var lc net.ListenConfig
-	lc = net.ListenConfig{Control: ControlOnConnSetupSoReusePort}
+	lc = net.ListenConfig{Control: rwf.ControlOnConnSetupSoReusePort}
 	// Listen to incoming UDP datagrams
 	pc, err := lc.ListenPacket(context.Background(), "udp", configuration.AppSinkAddress)
 	defer pc.Close()

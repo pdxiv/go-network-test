@@ -19,7 +19,7 @@ func startSession() {
 	configuration := rwf.GetConfiguration(rwf.ConfigFile)
 
 	var lc net.ListenConfig
-	lc = net.ListenConfig{Control: ControlOnConnSetupSoReusePort}
+	lc = net.ListenConfig{Control: rwf.ControlOnConnSetupSoReusePort}
 	// Listen to incoming UDP datagrams
 	pc, err := lc.ListenPacket(context.Background(), "udp", configuration.AppSinkAddress)
 	defer pc.Close()
@@ -42,6 +42,27 @@ func startSession() {
 			latestTime = t.UnixNano()
 		case messageReceived := <-appReceiver:
 			log.Print("Message: ", string(messageReceived.Payload), " Time: ", latestTime)
+		}
+	}
+}
+
+func receiveHubMessage(pc net.PacketConn, appReceiver chan rwf.AppCommData) {
+	var hubData rwf.HubCommData
+	rwf.InitHubMessage(&hubData)
+	var appData rwf.AppCommData
+	rwf.InitAppMessage(&appData)
+	hubData.MasterBuffer = hubData.MasterBuffer[0:rwf.BufferAllocationSize] // allocate receive buffer
+
+	for {
+		// Simple read
+		pc.ReadFrom(hubData.MasterBuffer)
+		if rwf.DecodeHubMessage(&hubData) {
+			// Copy the payload of the hub message to the Master Buffer of the app message
+			appData.MasterBuffer = hubData.Payload
+			rwf.AppDecodeAppMessage(&appData)
+			appReceiver <- appData
+			hubData.ExpectedHubSequenceNumber++
+		} else {
 		}
 	}
 }

@@ -18,7 +18,7 @@ func startSession() {
 	configuration := rwf.GetConfiguration(rwf.ConfigFile)
 
 	var lc net.ListenConfig
-	lc = net.ListenConfig{Control: ControlOnConnSetupSoReusePort}
+	lc = net.ListenConfig{Control: rwf.ControlOnConnSetupSoReusePort}
 	// Listen to incoming UDP datagrams
 	pc, err := lc.ListenPacket(context.Background(), "udp", configuration.HubSinkAddress)
 	if err != nil {
