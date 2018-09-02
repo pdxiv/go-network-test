@@ -2,10 +2,11 @@ package main
 
 // First attempt at hub. Simple and working, but missing functionality.
 import (
+	"context"
 	"log"
 	"net"
+	"syscall"
 
-	reuse "github.com/libp2p/go-reuseport"
 	rwf "github.com/pdxiv/gonetworktest"
 )
 
@@ -21,8 +22,10 @@ func startSession() {
 	connection, _ := net.DialUDP("udp", nil, destinationAddress)
 	defer connection.Close()
 
+	var lc net.ListenConfig
+	lc = net.ListenConfig{Control: controlOnConnSetupSoReusePort}
 	// Listen to incoming UDP datagrams
-	pc, err := reuse.ListenPacket("udp", configuration.HubSinkAddress)
+	pc, err := lc.ListenPacket(context.Background(), "udp", configuration.HubSinkAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,4 +51,18 @@ func listenToAppAndSendHub(pc net.PacketConn, connection *net.UDPConn) {
 			rwf.SendHubMessage(&sinkData, &hubData, connection)
 		}
 	}
+}
+
+func controlOnConnSetupSoReusePort(network string, address string, c syscall.RawConn) error {
+	var operr error
+	var fn = func(s uintptr) {
+		operr = syscall.SetsockoptInt(int(s), syscall.SOL_SOCKET, 0xF /* syscall.SO_REUSE_PORT */, 1)
+	}
+	if err := c.Control(fn); err != nil {
+		return err
+	}
+	if operr != nil {
+		return operr
+	}
+	return nil
 }
