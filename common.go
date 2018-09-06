@@ -139,7 +139,7 @@ func DecodeHubMessage(data *HubCommData) bool {
 	*/
 
 	if data.ExpectedHubSequenceNumber < data.HubSequenceNumber {
-		// Here we should have code to fill gaps from a "gobacker"
+		// Here we should have code to fill gaps from a "gob"
 		fmt.Println("**************** Sequence number", data.HubSequenceNumber, "not expected. Too high. Expecting", data.ExpectedHubSequenceNumber, "We should try to re-fetch ", data.ExpectedHubSequenceNumber, "-", data.HubSequenceNumber-1, "before continuing.")
 		data.ExpectedHubSequenceNumber = data.HubSequenceNumber + 1 // Just continue without missing data, for now
 		return true

@@ -15,8 +15,8 @@ my $json_data = {
     'AppSinkAddress'       => '0.0.0.0:9999',
     'HubRiseAddress' => "$broadcast_address:9999",
     'HubSinkAddress' => '0.0.0.0:9998',
-    'GobackerRiseAddress' => "$broadcast_address:9997",
-    'GobackerSinkAddress' => '0.0.0.0:9996',
+    'GobRiseAddress' => "$broadcast_address:9997",
+    'GobSinkAddress' => '0.0.0.0:9996',
     'MaxSendsInFlight'     => 10,
     
 };

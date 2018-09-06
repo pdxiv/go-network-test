@@ -64,7 +64,7 @@ sysctl -w net.core.wmem_default=33554432
 
 ### App message handling
 
-Since UDP doesn't guarantee message delivery, or message order, Apps receiving data from the hub need to have a mechanism for handling this. If one or more messages are lost, there is a gap in the sequence number, and the App will request the data with the missing sequence numbers from the "Gobacker" service. If a message with the same Hub sequence number has already been received, the message will be ignored.
+Since UDP doesn't guarantee message delivery, or message order, Apps receiving data from the hub need to have a mechanism for handling this. If one or more messages are lost, there is a gap in the sequence number, and the App will request the data with the missing sequence numbers from the "Gob" service. If a message with the same Hub sequence number has already been received, the message will be ignored.
 
 ```text
                      +------------+
@@ -86,15 +86,15 @@ Since UDP doesn't guarantee message delivery, or message order, Apps receiving d
 +-----v------+                            +-----+------+
 |Get missing |                            |Send missing|
 |packets from+---------------------------->packets to  |
-|Gobacker    |                            |callee      |
+|Gob    |                            |callee      |
 +------------+                            +------------+
 ```
 
-### Gobacker
+### Gob
 
 #### Usage
 
-The Gobacker service keeps track of what messages have been sent from the Hub. This is used in two situations:
+The Gob service keeps track of what messages have been sent from the Hub. This is used in two situations:
 
-- When an App is starting up and needs to read up on what messages have been sent to build internal state for a session. Typically, it broadcast "who has sequence number 0, for the latest SessionID (0xffffffffffffffff)", and when it gets a response from a Gobacker, it will connect to it via TCP and request messages with sequence numbers 0 to the largest possible sequence number (0xffffffffffffffff). The Gobacker will send as many packets as it has, and then closes down the connection, leaving the App to resume normal online operation. The App should keep track of what message sequence numbers have been sent out already for its' own AppID, so that it doesn't re-send messages to the Hub uselessly.
-- When an App experiences a gap in sequence numbers from the Hub. The App then asks the Gobacker for the messages with the missing sequence numbers, for the current SessionID.
+- When an App is starting up and needs to read up on what messages have been sent to build internal state for a session. Typically, it broadcast "who has sequence number 0, for the latest SessionID (0xffffffffffffffff)", and when it gets a response from a Gob, it will connect to it via TCP and request messages with sequence numbers 0 to the largest possible sequence number (0xffffffffffffffff). The Gob will send as many packets as it has, and then closes down the connection, leaving the App to resume normal online operation. The App should keep track of what message sequence numbers have been sent out already for its' own AppID, so that it doesn't re-send messages to the Hub uselessly.
+- When an App experiences a gap in sequence numbers from the Hub. The App then asks the Gob for the messages with the missing sequence numbers, for the current SessionID.

@@ -1,6 +1,6 @@
 package main
 
-// First attempt at Gobacker not working yet.
+// First attempt at Gob not working yet.
 // Currently missing polling functionality and tcp datachannel
 import (
 	"context"
@@ -38,7 +38,7 @@ func startSession() {
 
 	for {
 		select {
-		// Store raw incoming Hub messages in list, to answer Gobacker calls
+		// Store raw incoming Hub messages in list, to answer Gob calls
 		case messageReceived := <-hubReceiver:
 			// Create session key if it doesn't exist
 			if _, ok := hubStorage[messageReceived.SessionID]; !ok {
