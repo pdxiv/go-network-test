@@ -86,7 +86,7 @@ Since UDP doesn't guarantee message delivery, or message order, Apps receiving d
 +-----v------+                            +-----+------+
 |Get missing |                            |Send missing|
 |packets from+---------------------------->packets to  |
-|Gob    |                            |callee      |
+|Gob         |                            |callee      |
 +------------+                            +------------+
 ```
 
