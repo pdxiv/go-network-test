@@ -92,6 +92,32 @@ Since UDP doesn't guarantee message delivery, or message order, Apps receiving d
 
 ### Gob
 
+```text
+  +-------------+                         +-------------+
+  |             |                         |             |
+  |     App     |                         |     Hub     |
+  |             |                         |             |
+  +------^------+                         +-----+-------+
+         |                                      |
++---------------------------------------------------------+
+|        |                                      |         |
+| +------+------+          Gob            +-----v-------+ |
+| |     TCP     |                         |    Hub      | |
+| |  playback   |                         |  receiver   | |
+| |             |                         |             | |
+| +------^------+                         +-----+-------+ |
+|        |                                      |         |
+|        |                                      |         |
+|        |                                      |         |
+|        |            +-------------+     +-----v-------+ |
+|        |            | Gob append- |     | Application | |
+|        +------------+ only event  <-----+   logic     | |
+|                     |    store    |     |             | |
+|                     +-------------+     +-------------+ |
+|                                                         |
++---------------------------------------------------------+
+```
+
 #### Usage
 
 The Gob service keeps track of what messages have been sent from the Hub. This is used in two situations:
