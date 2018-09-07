@@ -10,6 +10,12 @@ import (
 	rwf "github.com/pdxiv/gonetworktest"
 )
 
+type gobStore struct {
+	data         map[uint64][]byte
+	lastSequence map[uint64]uint64
+	lastSession  uint64
+}
+
 func main() {
 	startSession()
 }

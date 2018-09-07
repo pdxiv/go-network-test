@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 )
@@ -16,7 +15,7 @@ func startServer(listenPort string) {
 	deadConnectionsIDs := make(chan int, 128)
 	publishes := make(chan publishMessage, 128)
 	connections := make(map[int]net.Conn)
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", listenPort))
+	listener, err := net.Listen("tcp", listenPort)
 	if err != nil {
 		panic(err)
 	}
