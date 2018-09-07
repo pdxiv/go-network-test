@@ -29,6 +29,8 @@ func startSession() {
 		log.Fatal(err)
 	}
 
+	go startServer(configuration.GobTCPAddress)
+
 	// Initialize channel for receiving
 	hubReceiver := make(chan rwf.HubCommData, 1)
 	messageProcessingDone := make(chan bool)

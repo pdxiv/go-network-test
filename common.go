@@ -25,6 +25,9 @@ type Configuration struct {
 	HubRiseAddress string
 	AppSinkAddress string
 	AppRiseAddress string
+	GobRiseAddress string
+	GobSinkAddress string
+	GobTCPAddress  string
 	// MaxSendsInFlight defines the maximum number of un-acknowledged sends that are allowed
 	MaxSendsInFlight int
 }

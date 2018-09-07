@@ -17,6 +17,7 @@ my $json_data = {
     'HubSinkAddress' => '0.0.0.0:9998',
     'GobRiseAddress' => "$broadcast_address:9997",
     'GobSinkAddress' => '0.0.0.0:9996',
+    'GobTCPAddress' => '0.0.0.0:9996',
     'MaxSendsInFlight'     => 10,
     
 };
