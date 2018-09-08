@@ -31,20 +31,25 @@ func startServer(listenPort string) {
 			connectionCounter++
 			log.Print("Number of connections: ", len(connections))
 		case deadConnectionID := <-deadConnectionsIDs:
-			_ = connections[deadConnectionID].Close()
-			delete(connections, deadConnectionID)
+			// Only close the connection if it hasn't been closed already
+			if _, ok := connections[deadConnectionID]; ok {
+				_ = connections[deadConnectionID].Close()
+				delete(connections, deadConnectionID)
+			}
 			log.Print("Number of connections: ", len(connections))
 		case publish := <-publishes:
-			if string(publish.message) == "shit\n" {
+
+			log.Print("Length of incoming message: ", len(publish.message))
+			/* if string(publish.message) == "shit\n" {
 				originatorPublish := publishMessage{message: []byte("That's a bad word!!\n"), sessionID: publish.sessionID}
 				go newPublish(originatorPublish, connections[publish.sessionID], deadConnectionsIDs)
-			}
+			} */
 			for session, connection := range connections {
-				if publish.sessionID != session {
-					go newPublish(publish, connection, deadConnectionsIDs)
-				} else {
+				if publish.sessionID == session {
 					originatorPublish := publishMessage{message: []byte("Thanks for publishing!\n"), sessionID: publish.sessionID}
 					go newPublish(originatorPublish, connection, deadConnectionsIDs)
+				} else {
+					go newPublish(publish, connection, deadConnectionsIDs)
 				}
 			}
 		}

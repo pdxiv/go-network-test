@@ -11,7 +11,7 @@ import (
 )
 
 type gobStore struct {
-	data         map[uint64][]byte
+	data         map[uint64][][]byte
 	lastSequence map[uint64]uint64
 	lastSession  uint64
 }
@@ -20,11 +20,17 @@ func main() {
 	startSession()
 }
 
+func initGobStore(gobStorage gobStore) {
+	gobStorage.data = make(map[uint64][][]byte)
+	gobStorage.lastSequence = make(map[uint64]uint64)
+}
+
 func startSession() {
 	// Load configuration from file
 	configuration := rwf.GetConfiguration(rwf.ConfigFile)
 
-	hubStorage := make(map[uint64][][]byte)
+	var gobStorage gobStore
+	initGobStore(gobStorage)
 
 	var lc net.ListenConfig
 	lc = net.ListenConfig{Control: rwf.ControlOnConnSetupSoReusePort}
@@ -49,12 +55,12 @@ func startSession() {
 		// Store raw incoming Hub messages in list, to answer Gob calls
 		case messageReceived := <-hubReceiver:
 			// Create session key if it doesn't exist
-			if _, ok := hubStorage[messageReceived.SessionID]; !ok {
-				hubStorage[messageReceived.SessionID] = make([][]byte, 0)
+			if _, ok := gobStorage.data[messageReceived.SessionID]; !ok {
+				gobStorage.data[messageReceived.SessionID] = make([][]byte, 0)
 			}
 			hubMasterBuffer = hubMasterBuffer[0:len(messageReceived.MasterBuffer)]
 			copy(hubMasterBuffer, messageReceived.MasterBuffer)
-			hubStorage[messageReceived.SessionID] = append(hubStorage[messageReceived.SessionID], hubMasterBuffer)
+			gobStorage.data[messageReceived.SessionID] = append(gobStorage.data[messageReceived.SessionID], hubMasterBuffer)
 
 			messageProcessingDone <- true // Allow message receiver to continue, when done
 		}

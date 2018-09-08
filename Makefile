@@ -21,3 +21,5 @@ clean:
 	rm -f app_rise
 	rm -f stompy
 	rm -f gob
+
+rebuild: clean build
