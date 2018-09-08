@@ -1,5 +1,3 @@
-# .PHONY: build
-
 build: hub app_rise stompy gob app_sink
 
 app_sink:	
