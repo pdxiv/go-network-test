@@ -30,7 +30,7 @@ Network configuration settings are required before running. Settings are located
 
 ### Performance
 
-To make sure that we get enough performance in Linux, it's important that we remember to increase the default OS send and receive buffer size for all types of connections. Increasing it to something like 32 mb seems to work well for what we're trying to do here. It may be a good idea to increase the number of simultaneous open file handles to handle high load scenarios better. It may also be a good idea to decrease the numer of "TIME_WAIT"s. 
+To make sure that we get enough performance in Linux, it's important that we remember to increase the default OS send and receive buffer size for all types of connections. Increasing it to something like 32 mb seems to work well for what we're trying to do here. It may be a good idea to increase the number of simultaneous open file handles to handle high load scenarios better.
 
 ```bash
 sysctl -w net.core.rmem_max=33554432
@@ -38,7 +38,6 @@ sysctl -w net.core.wmem_max=33554432
 sysctl -w net.core.rmem_default=33554432
 sysctl -w net.core.wmem_default=33554432
 sysctl -w fs.file-max=16777216
-sysctl -w ipv4.tcp_fin_timeout=4
 ```
 
 ## Concepts
