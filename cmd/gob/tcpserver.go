@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net"
 )
 
@@ -29,17 +28,17 @@ func startServer(listenPort string) {
 			connections[connectionCounter] = connection
 			go newConnectionSession(connection, publishes, deadConnectionsIDs, connectionCounter)
 			connectionCounter++
-			log.Print("Number of connections: ", len(connections))
+			// log.Print("Number of connections: ", len(connections))
 		case deadConnectionID := <-deadConnectionsIDs:
 			// Only close the connection if it hasn't been closed already
 			if _, ok := connections[deadConnectionID]; ok {
 				_ = connections[deadConnectionID].Close()
 				delete(connections, deadConnectionID)
 			}
-			log.Print("Number of connections: ", len(connections))
+			// log.Print("Number of connections: ", len(connections))
 		case publish := <-publishes:
 
-			log.Print("Length of incoming message: ", len(publish.message))
+			// log.Print("Length of incoming message: ", len(publish.message))
 			/* if string(publish.message) == "shit\n" {
 				originatorPublish := publishMessage{message: []byte("That's a bad word!!\n"), sessionID: publish.sessionID}
 				go newPublish(originatorPublish, connections[publish.sessionID], deadConnectionsIDs)
