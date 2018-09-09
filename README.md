@@ -134,7 +134,7 @@ The Gob append-only event store is simply a struct with the following format.
 
 ```golang
 type gobStore struct {
-    data         map[uint64][]byte
+    data         map[uint64][][]byte
     lastSequence map[uint64]uint64
     lastSession  uint64
 }
