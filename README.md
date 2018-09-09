@@ -19,7 +19,7 @@ To download and build:
 ```bash
 go get github.com/pdxiv/gonetworktest
 git clone https://github.com/pdxiv/gonetworktest
-./build.sh
+make
 ```
 
 Network configuration settings are required before running. Settings are located in a `conf.json` file. Either edit this manually to adapt to your network settings, or run
