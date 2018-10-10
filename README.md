@@ -106,7 +106,7 @@ type AppRiseData struct {
 }
 ```
 
-HubRiseData carries data from the Hub to Apps. Typically this encapsulates App messages.
+HubRiseData carries data from the Hub to Apps. Typically the payload contains one or more encapsulated App messages.
 
 ```golang
 type HubRiseData struct {
