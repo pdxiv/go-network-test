@@ -94,6 +94,8 @@ Since UDP doesn't guarantee message delivery, or message order, Apps receiving d
 
 #### Communication protocols
 
+The data fields all use network byte order (big-endian), when transmitted across the network.
+
 AppRiseData carries information from an App to the Hub.
 
 ```golang
